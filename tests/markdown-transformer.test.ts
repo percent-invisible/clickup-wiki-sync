@@ -7,34 +7,39 @@ import * as path from 'path';
 describe('MarkdownTransformer', () => {
 
   const transformer = new MarkdownTransformer();
+  const PROJECT_ROOT = '/mock/project/root';
+  const DOC_ROOT = PROJECT_ROOT + '/.clickup/doc-folder';
   const pageMapping: Record<string, { path: string; name: string }> = {
-    'abc123': { path: 'index.md', name: 'Doc' },
-    'def456': { path: 'folder1/subfolder/page1.md', name: 'page1' },
-    'ghi789': { path: 'folder2/page2.md', name: 'page2' },
-    'jkl012': { path: 'folder1/page3.md', name: 'page3' }
+    'abc123': { path: `${DOC_ROOT}/index.md`, name: 'Doc' },
+    'def456': { path: `${DOC_ROOT}/folder1/subfolder/page1.md`, name: 'page1' },
+    'ghi789': { path: `${DOC_ROOT}/folder2/page2.md`, name: 'page2' },
+    'jkl012': { path: `${DOC_ROOT}/folder1/page3.md`, name: 'page3' }
   };
-
 
   it('rewrites ClickUp doc links to local index.md', () => {
     const content = '[Doc](https://app.clickup.com/123/v/dc/abc123)';
+    const currentFilePath = `${DOC_ROOT}/current.md`;
+    const expectedLink = path.relative(path.dirname(currentFilePath), pageMapping['abc123'].path);
     const result = transformer.transform({ 
       content, 
-      basePath: '/path/to/wiki', 
+      basePath: DOC_ROOT, 
       pageMapping,
-      currentFilePath: '/path/to/wiki/current.md'
+      currentFilePath
     });
-    expect(result).toContain('[Doc](./index.md)');
+    expect(result).toContain(`[Doc](${expectedLink.startsWith('.') ? expectedLink : './' + expectedLink})`);
   });
 
   it('rewrites ClickUp page links to mapped local path', () => {
     const content = '[Page](https://app.clickup.com/123/v/dc/abc123/def456)';
+    const currentFilePath = `${DOC_ROOT}/current.md`;
+    const expectedLink = path.relative(path.dirname(currentFilePath), pageMapping['def456'].path);
     const result = transformer.transform({ 
       content, 
-      basePath: '/path/to/wiki', 
+      basePath: DOC_ROOT, 
       pageMapping,
-      currentFilePath: '/path/to/wiki/current.md'
+      currentFilePath
     });
-    expect(result).toContain('[page1](./folder1/subfolder/page1.md)');
+    expect(result).toContain(`[page1](${expectedLink.startsWith('.') ? expectedLink : './' + expectedLink})`);
   });
 
   it('leaves EXTERNAL links unchanged', () => {
@@ -72,44 +77,52 @@ describe('MarkdownTransformer', () => {
 
   it('replaces empty link text with mapped page name for ClickUp page links', () => {
     const content = '[](https://app.clickup.com/123/v/dc/abc123/def456)';
+    const currentFilePath = `${DOC_ROOT}/current.md`;
+    const expectedLink = path.relative(path.dirname(currentFilePath), pageMapping['def456'].path);
     const result = transformer.transform({ 
       content, 
-      basePath: '/path/to/wiki', 
+      basePath: DOC_ROOT, 
       pageMapping,
-      currentFilePath: '/path/to/wiki/current.md'
+      currentFilePath
     });
-    expect(result).toContain('[page1](./folder1/subfolder/page1.md)');
+    expect(result).toContain(`[page1](${expectedLink.startsWith('.') ? expectedLink : './' + expectedLink})`);
   });
   
   it('generates correct relative paths for files in different folders', () => {
     // Test from a deeper folder to a less deep folder
     const contentFromDeep = '[Link to page2](https://app.clickup.com/123/v/dc/abc123/ghi789)';
+    const currentFilePathDeep = `${DOC_ROOT}/folder1/subfolder/deep.md`;
+    const expectedLinkDeep = path.relative(path.dirname(currentFilePathDeep), pageMapping['ghi789'].path);
     const resultFromDeep = transformer.transform({ 
       content: contentFromDeep, 
-      basePath: '/path/to/wiki', 
+      basePath: DOC_ROOT, 
       pageMapping,
-      currentFilePath: '/path/to/wiki/folder1/subfolder/deep.md'
+      currentFilePath: currentFilePathDeep
     });
-    expect(resultFromDeep).toContain(`[${pageMapping['ghi789'].name}](../../folder2/page2.md)`);
+    expect(resultFromDeep).toContain(`[${pageMapping['ghi789'].name}](${expectedLinkDeep.startsWith('.') ? expectedLinkDeep : './' + expectedLinkDeep})`);
     
     // Test from a folder to a subfolder
     const contentToDeep = '[Link to page1](https://app.clickup.com/123/v/dc/abc123/def456)';
+    const currentFilePathToDeep = `${DOC_ROOT}/folder2/page2.md`;
+    const expectedLinkToDeep = path.relative(path.dirname(currentFilePathToDeep), pageMapping['def456'].path);
     const resultToDeep = transformer.transform({ 
       content: contentToDeep, 
-      basePath: '/path/to/wiki', 
+      basePath: DOC_ROOT, 
       pageMapping,
-      currentFilePath: '/path/to/wiki/folder2/page2.md'
+      currentFilePath: currentFilePathToDeep
     });
-    expect(resultToDeep).toContain(`[${pageMapping['def456'].name}](../folder1/subfolder/page1.md)`);
+    expect(resultToDeep).toContain(`[${pageMapping['def456'].name}](${expectedLinkToDeep.startsWith('.') ? expectedLinkToDeep : './' + expectedLinkToDeep})`);
     
     // Test between files in the same folder
     const contentSameFolder = '[Link to page3](https://app.clickup.com/123/v/dc/abc123/jkl012)';
+    const currentFilePathSameFolder = `${DOC_ROOT}/folder1/other.md`;
+    const expectedLinkSameFolder = path.relative(path.dirname(currentFilePathSameFolder), pageMapping['jkl012'].path);
     const resultSameFolder = transformer.transform({ 
       content: contentSameFolder, 
-      basePath: '/path/to/wiki', 
+      basePath: DOC_ROOT, 
       pageMapping,
-      currentFilePath: '/path/to/wiki/folder1/other.md'
+      currentFilePath: currentFilePathSameFolder
     });
-    expect(resultSameFolder).toContain(`[${pageMapping['jkl012'].name}](./page3.md)`);
+    expect(resultSameFolder).toContain(`[${pageMapping['jkl012'].name}](${expectedLinkSameFolder.startsWith('.') ? expectedLinkSameFolder : './' + expectedLinkSameFolder})`);
   });
 });

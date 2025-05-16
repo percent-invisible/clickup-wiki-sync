@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { ClickUpSyncer } from '../src/clickup-syncer.class';
-import { ClickUpUrlParser } from '../src/clickup-url-parser.class';
+import { ClickUpSyncer } from '../src/utils/clickup-syncer.class';
+import { ClickUpUrlParser } from '../src/utils/clickup-url-parser.class';
 import { ClickUpAPI } from '../src/api/clickup-api.class';
 
 describe('ClickUpUrlParser', () => {

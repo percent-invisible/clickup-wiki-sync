@@ -21,17 +21,23 @@ export class MarkdownTransformer {
 
         const links = this.linkParser.parseLinks({ content });
         let transformedContent = content;
-        const currentDirRel = path.dirname(path.relative(basePath, currentFilePath));
+        const currentDir = path.dirname(currentFilePath);
 
         for (const link of links) {
             let localLink: string | null = null;
             let pageName: string | null = null;
-
+            console.log('transform', JSON.stringify({ link, currentDir }));
             if (link.type === 'doc' && link.documentId && pageMapping[link.documentId]) {
-                localLink = path.relative(currentDirRel, pageMapping[link.documentId].path);
+                localLink = path.relative(currentDir, pageMapping[link.documentId].path);
+
+                console.log('transform doc', JSON.stringify({ link, currentDir,  mappingPath: pageMapping[link.documentId].path, localLink }));
+
                 pageName = pageMapping[link.documentId].name;
             } else if ((link.type === 'page' || link.type === 'linked_page') && link.pageId && pageMapping[link.pageId]) {
-                localLink = path.relative(currentDirRel, pageMapping[link.pageId].path);
+                localLink = path.relative(currentDir, pageMapping[link.pageId].path);
+
+                console.log('transform doc', JSON.stringify({ link, currentDir, mappingPath: pageMapping[link.pageId].path, localLink }));
+
                 pageName = pageMapping[link.pageId].name;
             }
 

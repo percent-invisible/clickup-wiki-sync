@@ -1,5 +1,5 @@
-import { LINK_PATTERNS } from './markdown/link-patterns.const';
-import { ParsedLink } from './types';
+import { LINK_PATTERNS } from '../markdown/link-patterns.const';
+import { ParsedLink } from '../types';
 
 /**
  * Extracts workspaceId, documentId, and pageId from a ClickUp doc/page URL.

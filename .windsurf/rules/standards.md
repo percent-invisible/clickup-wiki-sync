@@ -16,3 +16,4 @@ trigger: always_on
 - **DESTRUCTURING_RULE**: destructure single object params
 - **CONSTANT_NAMING_RULE**: exported consts and readonly class members are CONSTANT_CASE
 - **TYPES_LOCATION_RULE**: interfaces and types go at the `types` folder within the domain folder
+- **TIDY_WORKSPACE**: Clean up after yourself

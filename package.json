@@ -12,25 +12,18 @@
     }
   },
   "scripts": {
-    "build:cli": "tsc --project tsconfig.json",
+    "build": "tsc --project tsconfig.json",
+    "dev": "tsc --watch --project tsconfig.json",
     "run:cli": "node dist/cli/sync-wiki.cli.js",
-    "sync-wiki": "npm run build:cli && npm run run:cli",
-    "build": "tsup --format cjs",
-    "dev": "tsup --watch --format cjs",
+    "sync-wiki": "npm run build && npm run run:cli",
     "clean": "rm -rf dist",
     "test": "vitest run"
   },
   "dependencies": {
     "axios": "^1.6.7",
-    "chalk": "^4.1.2",
-    "commander": "^7.2.0",
-    "dotenv": "^16.4.5",
     "fs-extra": "^11.2.0",
     "js-yaml": "^3.14.1",
-    "markdown-it": "^12.3.2",
-    "node-fetch": "^3.3.2",
-    "sanitize-filename": "^1.6.3",
-    "zod": "^3.22.4"
+    "markdown-it": "^12.3.2"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
@@ -44,7 +37,6 @@
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.2.5",
     "ts-node": "^10.9.2",
-    "tsup": "^8.0.0",
     "typescript": "^5.4.0",
     "vitest": "^1.6.1"
   }

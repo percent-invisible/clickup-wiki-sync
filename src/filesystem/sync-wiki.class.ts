@@ -50,9 +50,11 @@ export class SyncWiki {
      */
     private collectPageMapping(options: { doc: ClickupPage; basePath: string; pageMapping: Record<string, { path: string; name: string }> }): void {
         const { doc, basePath, pageMapping } = options;
+        // console.log('collectPageMapping', JSON.stringify(options));
         if (doc.id) {
             const filename = this.pageFilename({ name: doc.name });
-            const filePath = path.join(basePath, filename);
+            const filePath = path.resolve(path.join(basePath, filename));
+            // console.log('collectPageMapping', { filename, filePath });    
             pageMapping[doc.id] = { path: filePath, name: doc.name };
         }
         if (doc.pages && Array.isArray(doc.pages)) {

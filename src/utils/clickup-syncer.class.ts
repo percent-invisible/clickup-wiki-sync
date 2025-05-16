@@ -1,5 +1,5 @@
-import { ConfigLoader } from './config-loader.class';
-import { ClickUpAPI } from './api/clickup-api.class';
+import { ConfigLoader } from '../config/config.loader';
+import { ClickUpAPI } from '../api/clickup-api.class';
 import { ClickUpUrlParser } from './clickup-url-parser.class';
 
 /**

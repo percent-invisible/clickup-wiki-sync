@@ -1,7 +1,7 @@
-import { ClickUpSyncer } from '../clickup-syncer.class';
+import { ClickUpSyncer } from '../utils/clickup-syncer.class';
 import { SyncWiki } from '../filesystem/sync-wiki.class';
 import { resolve } from 'path';
-import { ConfigLoader } from '../config-loader.class';
+import { ConfigLoader } from '../config/config.loader';
 
 /**
  * CLI entrypoint for syncing ClickUp docs/pages to local wiki.

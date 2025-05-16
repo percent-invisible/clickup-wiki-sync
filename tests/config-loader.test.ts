@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ConfigLoader } from '../src/config-loader.class';
+import { ConfigLoader } from '../src/config/config.loader';
 import fs from 'fs';
 
 const TEMP_CONFIG = './tests/temp_config.yml';

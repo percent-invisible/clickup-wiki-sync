@@ -1,15 +1,14 @@
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
+import { ConfigLoaderOptions } from './types/config-loader-options.type';
+import { AppConfig } from './types/app-config.type';
 
 /**
  * Loads configuration from a YAML file at the given path (default: './config.yml').
  * Returns the parsed config object.
  */
 export class ConfigLoader {
-    public static load(options: { configPath?: string } = {}): { 
-        clickup: { apiKey: string };
-        outputFolder?: string;
-    } {
+    public static load(options: ConfigLoaderOptions = {}): AppConfig {
         const { configPath = './config.yml' } = options;
         
         const file = fs.readFileSync(configPath, 'utf8');
