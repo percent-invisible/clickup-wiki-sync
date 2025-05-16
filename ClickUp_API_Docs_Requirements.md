@@ -132,6 +132,40 @@ curl --request GET \
 
 ---
 
+## 🆕 Feature: Fetch & Replace Unfetched Document Links
+
+### Overview
+
+When parsing and converting ClickUp pages to local Markdown files, the syncer will now intelligently detect and process **page or document links** that reference documents not yet fetched in the current sync session.
+
+### Behavior
+
+- 🔍 **Detection**  
+  While parsing Markdown content, any ClickUp links matching the known formats (e.g. `https://app.clickup.com/{workspace_id}/v/dc/{doc_id}`) are inspected.
+
+- 🧠 **Decision**  
+  If the `doc_id` or `page_id` in the link does **not** belong to an already fetched document tree, the tool will:
+  1. Initiate a new API request to retrieve the full document and its nested pages.
+  2. Add the newly fetched document to the working memory.
+  3. Resume the link replacement step, now including references from the newly fetched structure.
+
+- 🔁 **Recursive Handling**  
+  This feature enables seamless traversal across document trees, ensuring all internal ClickUp links (including deeply nested references) are correctly mapped to local files, regardless of their original inclusion scope.
+
+### Example Workflow
+
+1. Document `A` contains a link to Document `B`, which was not in the initial sync scope.
+2. The tool detects the link and fetches Document `B` and its pages.
+3. All links in Document `A` and `B` are now locally resolved (e.g. `../Other-Document/Some-Page.md`).
+
+### Benefits
+
+- ✅ No broken local links from overlooked references
+- ✅ Maintains document context and structure
+- ✅ Ideal for large knowledge bases with cross-linked docs
+
+---
+
 ## Summary
 
 This document captures all requirements for a ClickUp API docs syncer project that fetches nested docs and pages in markdown format, handles various ClickUp link patterns, interprets nested page structures (including pages that act as folders), and processes markdown links carefully. The TypeScript project setup includes an appropriate build system targeting ES2023, and the implementation should leverage existing markdown parsing libraries and utilize the markdown.transformer.ts file.
