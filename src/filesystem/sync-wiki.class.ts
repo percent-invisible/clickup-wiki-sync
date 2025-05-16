@@ -32,8 +32,8 @@ export class SyncWiki {
             const docFolder = path.join(rootOutputBase, this.pageDirname({ name: doc.name }));
             await fs.mkdir(docFolder, { recursive: true });
 
-            // Build page mapping (ClickUp pageId => local file path)
-            const pageMapping: Record<string, string> = {};
+            // Build page mapping (ClickUp pageId => { path, name })
+            const pageMapping: Record<string, { path: string; name: string }> = {};
             this.collectPageMapping({ doc, basePath: docFolder, pageMapping });
 
             // Start recursion from the document folder
@@ -48,12 +48,12 @@ export class SyncWiki {
     /**
      * Recursively collect pageId => local file path mapping.
      */
-    private collectPageMapping(options: { doc: ClickupPage; basePath: string; pageMapping: Record<string, string> }): void {
+    private collectPageMapping(options: { doc: ClickupPage; basePath: string; pageMapping: Record<string, { path: string; name: string }> }): void {
         const { doc, basePath, pageMapping } = options;
         if (doc.id) {
             const filename = this.pageFilename({ name: doc.name });
             const filePath = path.join(basePath, filename);
-            pageMapping[doc.id] = filePath;
+            pageMapping[doc.id] = { path: filePath, name: doc.name };
         }
         if (doc.pages && Array.isArray(doc.pages)) {
             for (const page of doc.pages) {
@@ -76,7 +76,7 @@ export class SyncWiki {
      * - Leaf pages are written as .md files in their parent directory.
      * - The synthetic root is used only as a recursion entry point.
      */
-    private async syncNode(options: { node: ClickupPage; basePath: string; pageMapping: Record<string, string> }): Promise<void> {
+    private async syncNode(options: { node: ClickupPage; basePath: string; pageMapping: Record<string, { path: string; name: string }> }): Promise<void> {
         const { node, basePath, pageMapping } = options;
 
         try {
@@ -119,7 +119,8 @@ export class SyncWiki {
                 const transformed = this.markdownTransformer.transform({
                     content: node.content,
                     basePath,
-                    pageMapping
+                    pageMapping, // now Record<string, { path, name }>
+                    currentFilePath: mdPath
                 });
 
                 if (/\[\]\([^\)]+\)/.test(node.content)) {

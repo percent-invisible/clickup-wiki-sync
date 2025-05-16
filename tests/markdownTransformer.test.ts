@@ -1,43 +1,115 @@
 import { describe, it, expect } from 'vitest';
-import { MarkdownTransformer } from '../src/markdown/markdown.transformer';
+import { MarkdownTransformer } from '../src/markdown/markdown-transformer.class';
 import { LinkType } from '../src/types';
+import * as path from 'path';
 
 
 describe('MarkdownTransformer', () => {
 
   const transformer = new MarkdownTransformer();
-  const pageMapping = {
-    'def456': 'pages/page1.md',
-    'ghi789': 'pages/page2.md'
+  const pageMapping: Record<string, { path: string; name: string }> = {
+    'abc123': { path: 'index.md', name: 'Doc' },
+    'def456': { path: 'folder1/subfolder/page1.md', name: 'page1' },
+    'ghi789': { path: 'folder2/page2.md', name: 'page2' },
+    'jkl012': { path: 'folder1/page3.md', name: 'page3' }
   };
+
 
   it('rewrites ClickUp doc links to local index.md', () => {
     const content = '[Doc](https://app.clickup.com/123/v/dc/abc123)';
-    const result = transformer.transform({ content, basePath: 'docs', pageMapping });
-    expect(result).toContain('[Doc](docs/index.md)');
+    const result = transformer.transform({ 
+      content, 
+      basePath: '/path/to/wiki', 
+      pageMapping,
+      currentFilePath: '/path/to/wiki/current.md'
+    });
+    expect(result).toContain('[Doc](./index.md)');
   });
 
   it('rewrites ClickUp page links to mapped local path', () => {
     const content = '[Page](https://app.clickup.com/123/v/dc/abc123/def456)';
-    const result = transformer.transform({ content, basePath: 'docs', pageMapping });
-    expect(result).toContain('[Page](pages/page1.md)');
+    const result = transformer.transform({ 
+      content, 
+      basePath: '/path/to/wiki', 
+      pageMapping,
+      currentFilePath: '/path/to/wiki/current.md'
+    });
+    expect(result).toContain('[page1](./folder1/subfolder/page1.md)');
   });
 
   it('leaves EXTERNAL links unchanged', () => {
+    const content = '[External](https://example.com/page)';
+    const result = transformer.transform({ 
+      content, 
+      basePath: '/path/to/wiki', 
+      pageMapping,
+      currentFilePath: '/path/to/wiki/current.md'
+    });
+    expect(result).toContain('[External](https://example.com/page)');
+  });
+
+  it('leaves unchanged local links that are already relative', () => {
     const content = '[Local](./foo/bar.md)';
-    const result = transformer.transform({ content, basePath: 'docs', pageMapping });
+    const result = transformer.transform({ 
+      content, 
+      basePath: '/path/to/wiki', 
+      pageMapping,
+      currentFilePath: '/path/to/wiki/current.md'
+    });
     expect(result).toContain('[Local](./foo/bar.md)');
   });
 
   it('leaves unknown links unchanged', () => {
     const content = '[Unknown](https://other.com/abc)';
-    const result = transformer.transform({ content, basePath: 'docs', pageMapping });
+    const result = transformer.transform({ 
+      content, 
+      basePath: '/path/to/wiki', 
+      pageMapping,
+      currentFilePath: '/path/to/wiki/current.md'
+    });
     expect(result).toContain('[Unknown](https://other.com/abc)');
   });
 
   it('replaces empty link text with mapped page name for ClickUp page links', () => {
     const content = '[](https://app.clickup.com/123/v/dc/abc123/def456)';
-    const result = transformer.transform({ content, basePath: 'docs', pageMapping });
-    expect(result).toContain('[page1](pages/page1.md)');
+    const result = transformer.transform({ 
+      content, 
+      basePath: '/path/to/wiki', 
+      pageMapping,
+      currentFilePath: '/path/to/wiki/current.md'
+    });
+    expect(result).toContain('[page1](./folder1/subfolder/page1.md)');
+  });
+  
+  it('generates correct relative paths for files in different folders', () => {
+    // Test from a deeper folder to a less deep folder
+    const contentFromDeep = '[Link to page2](https://app.clickup.com/123/v/dc/abc123/ghi789)';
+    const resultFromDeep = transformer.transform({ 
+      content: contentFromDeep, 
+      basePath: '/path/to/wiki', 
+      pageMapping,
+      currentFilePath: '/path/to/wiki/folder1/subfolder/deep.md'
+    });
+    expect(resultFromDeep).toContain(`[${pageMapping['ghi789'].name}](../../folder2/page2.md)`);
+    
+    // Test from a folder to a subfolder
+    const contentToDeep = '[Link to page1](https://app.clickup.com/123/v/dc/abc123/def456)';
+    const resultToDeep = transformer.transform({ 
+      content: contentToDeep, 
+      basePath: '/path/to/wiki', 
+      pageMapping,
+      currentFilePath: '/path/to/wiki/folder2/page2.md'
+    });
+    expect(resultToDeep).toContain(`[${pageMapping['def456'].name}](../folder1/subfolder/page1.md)`);
+    
+    // Test between files in the same folder
+    const contentSameFolder = '[Link to page3](https://app.clickup.com/123/v/dc/abc123/jkl012)';
+    const resultSameFolder = transformer.transform({ 
+      content: contentSameFolder, 
+      basePath: '/path/to/wiki', 
+      pageMapping,
+      currentFilePath: '/path/to/wiki/folder1/other.md'
+    });
+    expect(resultSameFolder).toContain(`[${pageMapping['jkl012'].name}](./page3.md)`);
   });
 });
