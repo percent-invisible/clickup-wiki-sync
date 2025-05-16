@@ -134,5 +134,4 @@ curl --request GET \
 
 ## Summary
 
-This document captures all requirements for a ClickUp API docs syncer project that fetches nested docs and pages in markdown format, handles various ClickUp link patterns, interprets nested page structures (including pages that act as folders), and processes markdown links carefully. The TypeScript project setup includes an appropriate build system targeting ES2023, and the implementation should leverage existing markdown parsing libraries.
-
+This document captures all requirements for a ClickUp API docs syncer project that fetches nested docs and pages in markdown format, handles various ClickUp link patterns, interprets nested page structures (including pages that act as folders), and processes markdown links carefully. The TypeScript project setup includes an appropriate build system targeting ES2023, and the implementation should leverage existing markdown parsing libraries and utilize the markdown.transformer.ts file.

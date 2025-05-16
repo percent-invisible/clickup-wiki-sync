@@ -1,0 +1,18 @@
+---
+trigger: always_on
+---
+
+- **SINGLE_EXPORT_RULE**: 1 export per file
+- **NAMING_CLARITY_RULE**: concise but descriptive names
+- **PACKAGE_FIRST_RULE**: prefer packages over code
+- **UNIT_TEST_RULE**: write unit tests for functionality
+- **CLASS_PREFERENCE_RULE**: prefer classes over functions
+- **WHITESPACE_READABILITY_RULE**: Use whitespace for readability except in JSON structures
+- **INDENTATION_RULE**: 4 spaces indent
+- **LINE_LENGTH_RULE**: max line length: 120
+- **RECORD_PROGRAMMING_RULE**: prefer record-based programming
+- **FILENAME_PATTERN_RULE**: filename pattern: [file-name].[file-type].ts
+- **SINGLE_OBJECT_PARAMS_RULE**: single object params named "options"
+- **DESTRUCTURING_RULE**: destructure single object params
+- **CONSTANT_NAMING_RULE**: exported consts and readonly class members are CONSTANT_CASE
+- **TYPES_LOCATION_RULE**: interfaces and types go at the `types` folder within the domain folder

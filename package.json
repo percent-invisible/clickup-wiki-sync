@@ -1,24 +1,51 @@
 {
   "name": "clickup-offline-wiki",
   "version": "1.0.0",
-  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "require": "./dist/index.js",
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "clean": "rm -rf dist"
+    "build:cli": "tsc --project tsconfig.json",
+    "run:cli": "node dist/cli/sync-wiki.cli.js",
+    "sync-wiki": "npm run build:cli && npm run run:cli",
+    "build": "tsup --format cjs",
+    "dev": "tsup --watch --format cjs",
+    "clean": "rm -rf dist",
+    "test": "vitest run"
   },
-  "dependencies": {},
+  "dependencies": {
+    "axios": "^1.6.7",
+    "chalk": "^4.1.2",
+    "commander": "^7.2.0",
+    "dotenv": "^16.4.5",
+    "fs-extra": "^11.2.0",
+    "js-yaml": "^3.14.1",
+    "markdown-it": "^12.3.2",
+    "node-fetch": "^3.3.2",
+    "sanitize-filename": "^1.6.3",
+    "zod": "^3.22.4"
+  },
   "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/js-yaml": "^4.0.9",
+    "@types/markdown-it": "^13.0.7",
+    "@types/node": "^20.11.19",
+    "@typescript-eslint/eslint-plugin": "^7.0.1",
+    "@typescript-eslint/parser": "^7.0.1",
+    "@vitest/ui": "1.6.1",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.2.5",
+    "ts-node": "^10.9.2",
     "tsup": "^8.0.0",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.1"
   }
 }
