@@ -1,8 +1,9 @@
 import * as path from 'path';
+import { PageMapping } from '../filesystem/types';
 import { ParsedLink } from '../types';
 import { LinkType } from '../types/link-type.enum';
-import { LinkHandlerFn } from './link-handler.type';
 import { LinkParser } from './link-parser.class';
+import { LinkHandlerFn } from './types';
 
 /**
  * Transforms ClickUp markdown content to local wiki format.
@@ -20,7 +21,7 @@ export class MarkdownTransformer {
     public transform({ content, basePath, pageMapping, currentFilePath }: {
         content: string;
         basePath: string;
-        pageMapping: Record<string, { path: string; name: string }>;
+        pageMapping: PageMapping;
         currentFilePath: string;
     }): string {
         const links = this.linkParser.parseLinks({ content });

@@ -1,7 +1,8 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { ClickupDoc, ClickupPage } from '../types';
 import { MarkdownTransformer } from '../markdown/markdown-transformer.class';
+import { ClickupDoc, ClickupPage } from '../types';
+import { PageMapping } from './types';
 
 /**
  * Recursively syncs ClickUp docs/pages to local markdown files and folders.
@@ -33,7 +34,7 @@ export class SyncWiki {
             await fs.mkdir(docFolder, { recursive: true });
 
             // Build page mapping (ClickUp pageId => { path, name })
-            const pageMapping: Record<string, { path: string; name: string }> = {};
+            const pageMapping: PageMapping = {};
             this.collectPageMapping({ doc, basePath: rootOutputBase, pageMapping });
 
             // Start recursion from the document folder
