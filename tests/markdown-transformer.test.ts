@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MarkdownTransformer } from '../src/markdown/markdown-transformer.class';
-import { LinkType } from '../src/types';
 import * as path from 'path';
-
 
 describe('MarkdownTransformer', () => {
 
@@ -20,13 +18,14 @@ describe('MarkdownTransformer', () => {
     const content = '[Doc](https://app.clickup.com/123/v/dc/abc123)';
     const currentFilePath = `${DOC_ROOT}/current.md`;
     const expectedLink = path.relative(path.dirname(currentFilePath), pageMapping['abc123'].path);
+    const expectedDocLink = expectedLink.startsWith('.') ? expectedLink : './' + expectedLink;
     const result = transformer.transform({ 
       content, 
       basePath: DOC_ROOT, 
       pageMapping,
       currentFilePath
     });
-    expect(result).toContain(`[Doc](${expectedLink.startsWith('.') ? expectedLink : './' + expectedLink})`);
+    expect(result).toContain(`[Doc](${expectedDocLink})`);
   });
 
   it('rewrites ClickUp page links to mapped local path', () => {
@@ -93,36 +92,39 @@ describe('MarkdownTransformer', () => {
     const contentFromDeep = '[Link to page2](https://app.clickup.com/123/v/dc/abc123/ghi789)';
     const currentFilePathDeep = `${DOC_ROOT}/folder1/subfolder/deep.md`;
     const expectedLinkDeep = path.relative(path.dirname(currentFilePathDeep), pageMapping['ghi789'].path);
+    const expectedDeepLink = expectedLinkDeep.startsWith('.') ? expectedLinkDeep : './' + expectedLinkDeep;
     const resultFromDeep = transformer.transform({ 
       content: contentFromDeep, 
       basePath: DOC_ROOT, 
       pageMapping,
       currentFilePath: currentFilePathDeep
     });
-    expect(resultFromDeep).toContain(`[${pageMapping['ghi789'].name}](${expectedLinkDeep.startsWith('.') ? expectedLinkDeep : './' + expectedLinkDeep})`);
+    expect(resultFromDeep).toContain(`[${pageMapping['ghi789'].name}](${expectedDeepLink})`);
     
     // Test from a folder to a subfolder
     const contentToDeep = '[Link to page1](https://app.clickup.com/123/v/dc/abc123/def456)';
     const currentFilePathToDeep = `${DOC_ROOT}/folder2/page2.md`;
     const expectedLinkToDeep = path.relative(path.dirname(currentFilePathToDeep), pageMapping['def456'].path);
+    const expectedToDeepLink = expectedLinkToDeep.startsWith('.') ? expectedLinkToDeep : './' + expectedLinkToDeep;
     const resultToDeep = transformer.transform({ 
       content: contentToDeep, 
       basePath: DOC_ROOT, 
       pageMapping,
       currentFilePath: currentFilePathToDeep
     });
-    expect(resultToDeep).toContain(`[${pageMapping['def456'].name}](${expectedLinkToDeep.startsWith('.') ? expectedLinkToDeep : './' + expectedLinkToDeep})`);
+    expect(resultToDeep).toContain(`[${pageMapping['def456'].name}](${expectedToDeepLink})`);
     
     // Test between files in the same folder
     const contentSameFolder = '[Link to page3](https://app.clickup.com/123/v/dc/abc123/jkl012)';
     const currentFilePathSameFolder = `${DOC_ROOT}/folder1/other.md`;
     const expectedLinkSameFolder = path.relative(path.dirname(currentFilePathSameFolder), pageMapping['jkl012'].path);
+    const expectedSameFolderLink = expectedLinkSameFolder.startsWith('.') ? expectedLinkSameFolder : './' + expectedLinkSameFolder;
     const resultSameFolder = transformer.transform({ 
       content: contentSameFolder, 
       basePath: DOC_ROOT, 
       pageMapping,
       currentFilePath: currentFilePathSameFolder
     });
-    expect(resultSameFolder).toContain(`[${pageMapping['jkl012'].name}](${expectedLinkSameFolder.startsWith('.') ? expectedLinkSameFolder : './' + expectedLinkSameFolder})`);
+    expect(resultSameFolder).toContain(`[${pageMapping['jkl012'].name}](${expectedSameFolderLink})`);
   });
 });

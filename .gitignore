@@ -70,3 +70,7 @@ out
 
 # TypeScript cache
 *.tsbuildinfo
+
+# ClickUp offline wiki
+.clickup
+.clickup-compare

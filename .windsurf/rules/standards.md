@@ -17,3 +17,5 @@ trigger: always_on
 - **CONSTANT_NAMING_RULE**: exported consts and readonly class members are CONSTANT_CASE
 - **TYPES_LOCATION_RULE**: interfaces and types go at the `types` folder within the domain folder
 - **TIDY_WORKSPACE**: Clean up after yourself
+- **BLOCK_BRACKETS**: Single statement condition and loop blocks always have closures
+- **NO_MAGIC_STRING**: Prefer enums or string literal types over general strings

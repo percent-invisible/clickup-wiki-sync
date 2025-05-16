@@ -1,5 +1,5 @@
 import MarkdownIt from 'markdown-it';
-import { ParsedLink } from '../types';
+import { LinkType, ParsedLink } from '../types';
 import { LinkParser } from './link-parser.class';
 
 /**
@@ -31,7 +31,7 @@ export class MarkdownTransformer {
 
                 let newText = link.text;
                 // If the link text is empty and this is a page/doc/linked_page, substitute the page name from mapping
-                if (!newText && ['page', 'linked_page', 'doc'].includes(link.type)) {
+                if (!newText && [LinkType.PAGE, LinkType.LINKED_PAGE, LinkType.DOC].includes(link.type)) {
                     // Try to get the page name from mapping using pageId or documentId
                     let pageName = '';
                     if (link.pageId && pageMapping[link.pageId]) {

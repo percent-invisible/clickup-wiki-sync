@@ -34,7 +34,7 @@ export class SyncWiki {
 
             // Build page mapping (ClickUp pageId => { path, name })
             const pageMapping: Record<string, { path: string; name: string }> = {};
-            this.collectPageMapping({ doc, basePath: docFolder, pageMapping });
+            this.collectPageMapping({ doc, basePath: rootOutputBase, pageMapping });
 
             // Start recursion from the document folder
             await this.syncNode({ node: doc, basePath: docFolder, pageMapping });
@@ -50,16 +50,20 @@ export class SyncWiki {
      */
     private collectPageMapping(options: { doc: ClickupPage; basePath: string; pageMapping: Record<string, { path: string; name: string }> }): void {
         const { doc, basePath, pageMapping } = options;
-        // console.log('collectPageMapping', JSON.stringify(options));
-        if (doc.id) {
-            const filename = this.pageFilename({ name: doc.name });
-            const filePath = path.resolve(path.join(basePath, filename));
-            // console.log('collectPageMapping', { filename, filePath });    
-            pageMapping[doc.id] = { path: filePath, name: doc.name };
-        }
+        const dirname = this.pageDirname({ name: doc.name });
+        const filename = this.pageFilename({ name: doc.name });
+
+        // If this is the root doc, use basePath; otherwise, nest in dirname
+        const isRoot = !('parentId' in doc) || !doc.parentId;
+        const filePath = isRoot
+            ? path.resolve(path.join(basePath, filename))
+            : path.resolve(path.join(basePath, dirname, filename));
+        pageMapping[doc.id] = { path: filePath, name: doc.name };
+
         if (doc.pages && Array.isArray(doc.pages)) {
             for (const page of doc.pages) {
-                this.collectPageMapping({ doc: page, basePath: path.join(basePath, this.pageDirname({ name: doc.name })), pageMapping });
+                // For children, pass basePath + dirname so they nest correctly
+                this.collectPageMapping({ doc: page, basePath: path.join(basePath, dirname), pageMapping });
             }
         }
     }

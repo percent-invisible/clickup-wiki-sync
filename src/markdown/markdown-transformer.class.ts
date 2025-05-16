@@ -1,7 +1,8 @@
-import MarkdownIt from 'markdown-it';
-import { ParsedLink } from '../types';
-import { LinkParser } from './link-parser.class';
 import * as path from 'path';
+import { ParsedLink } from '../types';
+import { LinkType } from '../types/link-type.enum';
+import { LinkHandlerFn } from './link-handler.type';
+import { LinkParser } from './link-parser.class';
 
 /**
  * Transforms ClickUp markdown content to local wiki format.
@@ -14,11 +15,14 @@ export class MarkdownTransformer {
     }
 
     /**
-     * Transform markdown content, replacing ClickUp links with local equivalents.
+     * Transforms markdown content, replacing ClickUp links with local equivalents.
      */
-    public transform(options: { content: string; basePath: string; pageMapping: Record<string, { path: string; name: string }>; currentFilePath: string }): string {
-        const { content, basePath, pageMapping, currentFilePath } = options;
-
+    public transform({ content, basePath, pageMapping, currentFilePath }: {
+        content: string;
+        basePath: string;
+        pageMapping: Record<string, { path: string; name: string }>;
+        currentFilePath: string;
+    }): string {
         const links = this.linkParser.parseLinks({ content });
         let transformedContent = content;
         const currentDir = path.dirname(currentFilePath);
@@ -26,27 +30,24 @@ export class MarkdownTransformer {
         for (const link of links) {
             let localLink: string | null = null;
             let pageName: string | null = null;
-            console.log('transform', JSON.stringify({ link, currentDir }));
-            if (link.type === 'doc' && link.documentId && pageMapping[link.documentId]) {
+
+            if (link.type === LinkType.DOC && link.documentId && pageMapping[link.documentId]) {
                 localLink = path.relative(currentDir, pageMapping[link.documentId].path);
-
-                console.log('transform doc', JSON.stringify({ link, currentDir,  mappingPath: pageMapping[link.documentId].path, localLink }));
-
                 pageName = pageMapping[link.documentId].name;
-            } else if ((link.type === 'page' || link.type === 'linked_page') && link.pageId && pageMapping[link.pageId]) {
-                localLink = path.relative(currentDir, pageMapping[link.pageId].path);
-
-                console.log('transform doc', JSON.stringify({ link, currentDir, mappingPath: pageMapping[link.pageId].path, localLink }));
-
+            } else if ((link.type === LinkType.PAGE || link.type === LinkType.LINKED_PAGE) && link.pageId && pageMapping[link.pageId]) {
                 pageName = pageMapping[link.pageId].name;
+                localLink = path.relative(currentDir, pageMapping[link.pageId].path);
             }
 
             if (localLink) {
-                if (!localLink.startsWith('.')) localLink = './' + localLink;
+                if (!localLink.startsWith('.')) {
+                    localLink = './' + localLink;
+                }
+
                 let newText = link.text;
                 if (pageName) {
                     newText = pageName;
-                } else if (!newText && ['page', 'linked_page', 'doc'].includes(link.type)) {
+                } else if (!newText && [LinkType.PAGE, LinkType.LINKED_PAGE, LinkType.DOC].includes(link.type)) {
                     newText = 'Untitled';
                 }
                 const pattern = new RegExp(`\\[${this.escapeRegExp(link.text)}\\]\\(${this.escapeRegExp(link.url)}\\)`, 'g');
@@ -58,28 +59,40 @@ export class MarkdownTransformer {
     }
 
     /**
-     * Create a local link from a parsed ClickUp link using record-based programming.
+     * Record-based local link handlers for ClickUp links.
      */
-    public static readonly LOCAL_LINK_HANDLERS: Record<string, (options: {
+    public static readonly LOCAL_LINK_HANDLERS: Record<LinkType, LinkHandlerFn> = {
+        [LinkType.UNKNOWN]: () => null,
+        [LinkType.EXTERNAL]: ({ link }) => link.url,
+        [LinkType.DOC]: ({ link, basePath, pageMapping }) => {
+            return link.documentId && pageMapping[link.documentId]
+                ? pageMapping[link.documentId].path
+                : (link.documentId ? `${basePath}/index.md` : null);
+        },
+        [LinkType.PAGE]: ({ link, pageMapping }) => {
+            return link.pageId && pageMapping[link.pageId]
+                ? pageMapping[link.pageId].path
+                : null;
+        },
+        [LinkType.LINKED_PAGE]: ({ link, pageMapping }) => {
+            return link.pageId && pageMapping[link.pageId]
+                ? pageMapping[link.pageId].path
+                : null;
+        }
+    };
+
+
+    private createLocalLink({ link, basePath, pageMapping }: {
         link: ParsedLink;
         basePath: string;
         pageMapping: Record<string, { path: string; name: string }>;
-    }) => string | null> = {
-        unknown: () => null,
-        external: ({ link }) => link.url,
-        doc: ({ link, basePath, pageMapping }) => link.documentId && pageMapping[link.documentId] ? pageMapping[link.documentId].path : (link.documentId ? `${basePath}/index.md` : null),
-        page: ({ link, pageMapping }) => link.pageId && pageMapping[link.pageId] ? pageMapping[link.pageId].path : null,
-        linked_page: ({ link, pageMapping }) => link.pageId && pageMapping[link.pageId] ? pageMapping[link.pageId].path : null
-    };
-
-    private createLocalLink(options: { link: ParsedLink; basePath: string; pageMapping: Record<string, { path: string; name: string }>; }): string | null {
-        const { link, basePath, pageMapping } = options;
-
+    }): string | null {
+        // Use enum for key lookup
         return MarkdownTransformer.LOCAL_LINK_HANDLERS[link.type]?.({ link, basePath, pageMapping }) ?? null;
     }
 
     /**
-     * Escape special characters for use in a regular expression.
+     * Escapes special characters for use in a regular expression.
      */
     private escapeRegExp(str: string): string {
         return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
