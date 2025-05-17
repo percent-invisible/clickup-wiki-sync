@@ -121,18 +121,12 @@ export class SyncWiki {
             if (node.content) {
                 const mdPath = path.join(targetDir, this.pageFilename({ name: node.name }));
                 
-                
                 // Transform markdown
-                const transformed = this.markdownTransformer.transform({
+                const transformed = await this.markdownTransformer.transform({
                     content: node.content,
-                    basePath,
-                    pageMapping, // now Record<string, { path, name }>
+                    pageMapping,
                     currentFilePath: mdPath
                 });
-
-                if (/\[\]\([^\)]+\)/.test(node.content)) {
-                    
-                }
 
                 try {
                     await fs.writeFile(mdPath, transformed, 'utf-8');

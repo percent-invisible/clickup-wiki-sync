@@ -18,27 +18,28 @@ export class MarkdownTransformer {
     /**
      * Transforms markdown content, replacing ClickUp links with local equivalents.
      */
-    public transform({ content, basePath, pageMapping, currentFilePath }: {
+    public async transform({ content, pageMapping, currentFilePath }: {
         content: string;
-        basePath: string;
         pageMapping: PageMapping;
         currentFilePath: string;
-    }): string {
-        const links = this.linkParser.parseLinks({ content });
+    }): Promise<string> {
+        const links = await this.linkParser.parseLinks({ content });
         let transformedContent = content;
         const currentDir = path.dirname(currentFilePath);
 
         for (const link of links) {
-            let localLink: string | null = null;
-            let pageName: string | null = null;
+            const lookupId = (link.type === LinkType.DOC && link.documentId && pageMapping[link.documentId]) 
+                ? link.documentId 
+                : (link.type === LinkType.PAGE || link.type === LinkType.LINKED_PAGE) && link.pageId && pageMapping[link.pageId]
+                    ? link.pageId
+                    : null;
 
-            if (link.type === LinkType.DOC && link.documentId && pageMapping[link.documentId]) {
-                localLink = path.relative(currentDir, pageMapping[link.documentId].path);
-                pageName = pageMapping[link.documentId].name;
-            } else if ((link.type === LinkType.PAGE || link.type === LinkType.LINKED_PAGE) && link.pageId && pageMapping[link.pageId]) {
-                pageName = pageMapping[link.pageId].name;
-                localLink = path.relative(currentDir, pageMapping[link.pageId].path);
+            if (lookupId == null) {
+                continue;
             }
+            
+            let localLink: string = path.relative(currentDir, pageMapping[lookupId].path);
+            const pageName: string = pageMapping[lookupId].name;
 
             if (localLink) {
                 if (!localLink.startsWith('.')) {

@@ -1,7 +1,7 @@
 import MarkdownIt from 'markdown-it';
+import { ClickupSyncWiki } from '../sync/clickup-sync-wiki.class';
 import { LinkType, ParsedLink } from '../types';
 import { LINK_PATTERNS } from './link-patterns.const';
-import { MarkdownTransformer } from './markdown-transformer.class';
 
 /**
  * Parses ClickUp and Markdown links from content using markdown-it.
@@ -18,7 +18,7 @@ export class LinkParser {
      * Extracts all links from markdown content using markdown-it tokens.
      * Handles ClickUp and standard markdown links, including ClickUp's URL-encoded nested pattern.
      */
-    public parseLinks(options: { content: string }): ParsedLink[] {
+    public async parseLinks(options: { content: string }): Promise<ParsedLink[]> {
         const { content } = options;
 
         const tokens = this.MD.parse(content, {});
@@ -47,14 +47,19 @@ export class LinkParser {
                         let parsedLinks: ParsedLink[] = [];
                         if (href && this.isUrlEncodedMarkdownLink({ href })) {
                             const decoded = decodeURIComponent(href);
-                            parsedLinks = this.parseLinks({ content: decoded });
+                            parsedLinks = await this.parseLinks({ content: decoded });
                         }
 
                         if (parsedLinks.length > 0) {
                             links.push(...parsedLinks);
                         } else {
                             const parsedLink = this.parseLinkUrl({ url: href || '', text });
+
                             if (parsedLink) {
+                                if (parsedLink.text === parsedLink.url && parsedLink.type === LinkType.LINKED_PAGE) {
+                                    await ClickupSyncWiki.run({ url: parsedLink.url });
+                                }
+
                                 links.push(parsedLink);
                             }
                         }
