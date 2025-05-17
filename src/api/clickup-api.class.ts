@@ -20,7 +20,11 @@ export class ClickUpAPI {
      * @param maxPageDepth Maximum depth to fetch pages (-1 for unlimited)
      * @returns The document with nested pages
      */
-    public async getDocument(options: { workspaceId: string; documentId: string; maxPageDepth?: number }): Promise<ClickupDoc> {
+    public async getDocument(options: {
+        workspaceId: string;
+        documentId: string;
+        maxPageDepth?: number;
+    }): Promise<ClickupDoc> {
         const { workspaceId, documentId, maxPageDepth = -1 } = options;
         try {
             // Fetch pages and doc metadata in parallel
@@ -28,13 +32,13 @@ export class ClickUpAPI {
             const metaPromise = this.getDocumentMeta({ workspaceId, documentId });
             const pagesPromise = axios.get(pagesUrl, {
                 headers: {
-                    'Authorization': this.API_KEY,
-                    'Accept': 'application/json'
+                    Authorization: this.API_KEY,
+                    Accept: 'application/json',
                 },
                 params: {
                     max_page_depth: maxPageDepth,
-                    content_format: 'text/md'
-                }
+                    content_format: 'text/md',
+                },
             });
             const [meta, response] = await Promise.all([metaPromise, pagesPromise]);
 
@@ -46,14 +50,16 @@ export class ClickUpAPI {
                     name: meta?.name || 'Root',
                     content: '',
                     isRoot: true,
-                    pages: response.data
+                    pages: response.data,
                 };
             }
             // If it's already an object, just return as-is
             return response.data;
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                throw new Error(`ClickUp API error: ${error.response?.status} - ${error.response?.data?.error || error.message}`);
+                throw new Error(
+                    `ClickUp API error: ${error.response?.status} - ${error.response?.data?.error || error.message}`,
+                );
             }
             throw error;
         }
@@ -65,9 +71,9 @@ export class ClickUpAPI {
         const metaUrl = `${this.BASE_URL}/workspaces/${workspaceId}/docs/${documentId}`;
         const response = await axios.get(metaUrl, {
             headers: {
-                'Authorization': this.API_KEY,
-                'Accept': 'application/json'
-            }
+                Authorization: this.API_KEY,
+                Accept: 'application/json',
+            },
         });
         return { name: response.data?.name || 'Root' };
     }
@@ -75,7 +81,7 @@ export class ClickUpAPI {
     /**
      * Get a page from ClickUp
      * @param workspaceId The workspace ID
-     * @param documentId The document ID 
+     * @param documentId The document ID
      * @param pageId The page ID
      * @returns The page content
      */
@@ -85,18 +91,20 @@ export class ClickUpAPI {
             const url = `${this.BASE_URL}/workspaces/${workspaceId}/docs/${documentId}/pages/${pageId}`;
             const response = await axios.get(url, {
                 headers: {
-                    'Authorization': this.API_KEY,
-                    'Accept': 'application/json'
+                    Authorization: this.API_KEY,
+                    Accept: 'application/json',
                 },
                 params: {
-                    content_format: 'text/md'
-                }
+                    content_format: 'text/md',
+                },
             });
 
             return response.data;
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                throw new Error(`ClickUp API error: ${error.response?.status} - ${error.response?.data?.error || error.message}`);
+                throw new Error(
+                    `ClickUp API error: ${error.response?.status} - ${error.response?.data?.error || error.message}`,
+                );
             }
             throw error;
         }

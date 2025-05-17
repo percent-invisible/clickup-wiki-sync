@@ -13,7 +13,7 @@ export class ClickupSyncWikiCli {
 
     public static async run(options: { url?: string } = {}): Promise<void> {
         const { url = process.argv[2] } = options;
-        
+
         if (!url) {
             this.printUsage();
             process.exit(1);

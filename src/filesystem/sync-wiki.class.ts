@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { MarkdownTransformer } from '../markdown/markdown-transformer.class';
+import { MarkdownTransformer } from '../markdown/markdown.transformer';
 import { ClickupDoc, ClickupPage } from '../types';
 import { PageMapping } from './types';
 
@@ -23,7 +23,7 @@ export class SyncWiki {
      */
     public async syncDocTree(options: { doc: ClickupDoc; basePath: string }): Promise<void> {
         const { doc, basePath } = options;
-        
+
         try {
             // Always work inside DIST_ROOT
             const rootOutputBase = this.DIST_ROOT;
@@ -39,7 +39,6 @@ export class SyncWiki {
 
             // Start recursion from the document folder
             await this.syncNode({ node: doc, basePath: docFolder, pageMapping });
-            
         } catch (err) {
             console.error('[ERROR] Error in syncDocTree:', err);
             throw err;
@@ -49,7 +48,11 @@ export class SyncWiki {
     /**
      * Recursively collect pageId => local file path mapping.
      */
-    private collectPageMapping(options: { doc: ClickupPage; basePath: string; pageMapping: Record<string, { path: string; name: string }> }): void {
+    private collectPageMapping(options: {
+        doc: ClickupPage;
+        basePath: string;
+        pageMapping: Record<string, { path: string; name: string }>;
+    }): void {
         const { doc, basePath, pageMapping } = options;
         const dirname = this.pageDirname({ name: doc.name });
         const filename = this.pageFilename({ name: doc.name });
@@ -83,7 +86,11 @@ export class SyncWiki {
      * - Leaf pages are written as .md files in their parent directory.
      * - The synthetic root is used only as a recursion entry point.
      */
-    private async syncNode(options: { node: ClickupPage; basePath: string; pageMapping: Record<string, { path: string; name: string }> }): Promise<void> {
+    private async syncNode(options: {
+        node: ClickupPage;
+        basePath: string;
+        pageMapping: Record<string, { path: string; name: string }>;
+    }): Promise<void> {
         const { node, basePath, pageMapping } = options;
 
         try {
@@ -101,7 +108,6 @@ export class SyncWiki {
                 return;
             }
 
-            
             const hasSubpages = node.pages && Array.isArray(node.pages) && node.pages.length > 0;
             let targetDir = basePath;
 
@@ -110,7 +116,6 @@ export class SyncWiki {
                 targetDir = path.join(basePath, this.pageDirname({ name: node.name }));
                 try {
                     await fs.mkdir(targetDir, { recursive: true });
-                    
                 } catch (dirErr) {
                     console.error('[ERROR] Failed to create directory:', targetDir, dirErr);
                     throw dirErr;
@@ -120,17 +125,16 @@ export class SyncWiki {
             // Write the markdown file for this node in the current directory (not in a subfolder unless it has subpages)
             if (node.content) {
                 const mdPath = path.join(targetDir, this.pageFilename({ name: node.name }));
-                
+
                 // Transform markdown
                 const transformed = await this.markdownTransformer.transform({
                     content: node.content,
                     pageMapping,
-                    currentFilePath: mdPath
+                    currentFilePath: mdPath,
                 });
 
                 try {
                     await fs.writeFile(mdPath, transformed, 'utf-8');
-                    
                 } catch (fileErr) {
                     console.error('[ERROR] Failed to write file:', mdPath, fileErr);
                     throw fileErr;

@@ -7,7 +7,6 @@ import { LINK_PATTERNS } from './link-patterns.const';
  * Parses ClickUp and Markdown links from content using markdown-it.
  */
 export class LinkParser {
-
     private readonly MD: MarkdownIt;
 
     constructor() {
@@ -36,10 +35,7 @@ export class LinkParser {
 
                         // The next token should be the link text
                         let text = '';
-                        if (
-                            j + 1 < token.children.length &&
-                            token.children[j + 1].type === 'text'
-                        ) {
+                        if (j + 1 < token.children.length && token.children[j + 1].type === 'text') {
                             text = token.children[j + 1].content;
                         }
 
@@ -103,7 +99,7 @@ export class LinkParser {
                 const record: ParsedLink = {
                     type,
                     text,
-                    url
+                    url,
                 };
                 keys.forEach((k: keyof ParsedLink, idx: number) => {
                     (record as any)[k] = match[idx + 1];
@@ -116,14 +112,14 @@ export class LinkParser {
             return {
                 type: LinkType.EXTERNAL,
                 text,
-                url
+                url,
             };
         }
 
         return {
             type: LinkType.UNKNOWN,
             text,
-            url
+            url,
         };
     }
 }

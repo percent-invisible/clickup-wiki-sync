@@ -3,7 +3,7 @@ import { execFile } from 'child_process';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-const CLI_PATH = path.join(__dirname, '../src/cli/sync-wiki-cli.class.ts');
+const CLI_PATH = path.join(__dirname, '../src/cli/clickup-sync-wiki-cli.class.ts');
 const TEMP_DIST = path.join(__dirname, 'tmp_cli_dist');
 
 // Minimal mock for ClickUpSyncer and SyncWiki are not required since the CLI uses real implementation.
@@ -21,7 +21,7 @@ describe('sync-wiki.cli.ts', () => {
         await new Promise<void>((resolve, reject) => {
             const child = execFile('ts-node', [CLI_PATH], (error, stdout, stderr) => {
                 try {
-                    const usageMsg = 'Usage: ts-node src/cli/sync-wiki-cli.class.ts <ClickUp URL>';
+                    const usageMsg = 'Usage: ts-node src/cli/clickup-sync-wiki-cli.class.ts <ClickUp URL>';
                     if (!stdout.includes(usageMsg) && !stderr.includes(usageMsg)) {
                         console.error('stdout:', stdout);
                         console.error('stderr:', stderr);

@@ -1,4 +1,4 @@
-import { LinkType } from "./link-type.enum";
+import { LinkType } from './link-type.enum';
 
 // Represents a parsed markdown or ClickUp link
 export type ParsedLink = {

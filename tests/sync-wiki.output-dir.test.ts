@@ -13,7 +13,7 @@ const minimalDoc: ClickupDoc = {
     workspaceId: 'ws1',
     docId: 'docRoot',
     isRoot: true,
-    pages: []
+    pages: [],
 };
 
 describe('SyncWiki output directory', () => {
