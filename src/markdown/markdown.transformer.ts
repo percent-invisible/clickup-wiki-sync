@@ -3,7 +3,7 @@ import { PageMapping } from '../filesystem/types';
 import { ParsedLink } from '../types';
 import { LinkType } from '../types/link-type.enum';
 import { LinkParser } from './link-parser.class';
-import { LinkHandlerFn } from './types';
+import { LinkHandlerFn, LinkReplacementInfo, TransformResult } from './types';
 
 /**
  * Transforms ClickUp markdown content to local wiki format.
@@ -22,14 +22,17 @@ export class MarkdownTransformer {
         content,
         pageMapping,
         currentFilePath,
+        diagnoseLinks = false,
     }: {
         content: string;
         pageMapping: PageMapping;
         currentFilePath: string;
-    }): Promise<string> {
+        diagnoseLinks?: boolean;
+    }): Promise<string | TransformResult> {
         const links = await this.linkParser.parseLinks({ content });
         let transformedContent = content;
         const currentDir = path.dirname(currentFilePath);
+        const replacedLinks: LinkReplacementInfo[] = [];
 
         for (const link of links) {
             const lookupId =
@@ -64,10 +67,25 @@ export class MarkdownTransformer {
                     'g',
                 );
                 transformedContent = transformedContent.replace(pattern, `[${newText}](${localLink})`);
+                
+                // If diagnostics are requested, record details about this replacement
+                if (diagnoseLinks) {
+                    replacedLinks.push({
+                        text: link.text,
+                        newText,
+                        originalUrl: link.url,
+                        localLink,
+                        pageId: link.pageId,
+                        documentId: link.documentId,
+                    });
+                }
             }
         }
 
-        return transformedContent;
+        // Return diagnostics if requested, otherwise just the transformed content
+        return diagnoseLinks 
+            ? { transformedContent, replacedLinks } 
+            : transformedContent;
     }
 
     /**

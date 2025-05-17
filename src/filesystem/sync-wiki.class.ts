@@ -20,8 +20,9 @@ export class SyncWiki {
 
     /**
      * Entry point for syncing a ClickUp doc tree to the local filesystem.
+     * @returns Object containing the pageMapping and docPath for cross-doc link replacement
      */
-    public async syncDocTree(options: { doc: ClickupDoc; basePath: string }): Promise<void> {
+    public async syncDocTree(options: { doc: ClickupDoc; basePath: string }): Promise<{ pageMapping: PageMapping; docPath: string }> {
         const { doc, basePath } = options;
 
         try {
@@ -39,6 +40,9 @@ export class SyncWiki {
 
             // Start recursion from the document folder
             await this.syncNode({ node: doc, basePath: docFolder, pageMapping });
+
+            // Return the pageMapping and docPath for cross-doc link replacement
+            return { pageMapping, docPath: docFolder };
         } catch (err) {
             console.error('[ERROR] Error in syncDocTree:', err);
             throw err;
@@ -127,14 +131,19 @@ export class SyncWiki {
                 const mdPath = path.join(targetDir, this.pageFilename({ name: node.name }));
 
                 // Transform markdown
-                const transformed = await this.markdownTransformer.transform({
+                const transformResult = await this.markdownTransformer.transform({
                     content: node.content,
                     pageMapping,
                     currentFilePath: mdPath,
                 });
 
+                // Handle both string and TransformResult return types
+                const transformedContent = typeof transformResult === 'string' 
+                    ? transformResult 
+                    : transformResult.transformedContent;
+
                 try {
-                    await fs.writeFile(mdPath, transformed, 'utf-8');
+                    await fs.writeFile(mdPath, transformedContent, 'utf-8');
                 } catch (fileErr) {
                     console.error('[ERROR] Failed to write file:', mdPath, fileErr);
                     throw fileErr;

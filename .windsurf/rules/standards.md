@@ -19,4 +19,5 @@ trigger: always_on
 - **TIDY_WORKSPACE**: Clean up after yourself
 - **BLOCK_BRACKETS**: Single statement condition and loop blocks always have closures
 - **NO_MAGIC_STRING**: Prefer enums or string literal types over general strings
-- **NO_SHORTHAND_COMPARISONS**: Do NOT use `if (var)` and `if (!var)`. DO use `if (var == null)` for existence checks and `if (var === comparison)` for equivalence checks 
+- **NO_SHORTHAND_COMPARISONS**: Do NOT use `if (var)` and `if (!var)`. DO use `if (var == null)` for existence checks and `if (var === comparison)` for equivalence checks
+- **ENUM_FORMAT**: keys and calues must be the same in CONSTANT_CASE

@@ -10,7 +10,10 @@ vi.mock('../src/filesystem/sync-wiki.class', () => ({
             /* empty */
         }
         syncDocTree() {
-            return Promise.resolve();
+            return Promise.resolve({
+                pageMapping: {},
+                docPath: '.clickup-test/doc-folder'
+            });
         }
     },
 }));

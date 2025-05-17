@@ -1,7 +1,9 @@
 import MarkdownIt from 'markdown-it';
 import { ClickupSyncWiki } from '../sync/clickup-sync-wiki.class';
 import { LinkType, ParsedLink } from '../types';
-import { LINK_PATTERNS } from './link-patterns.const';
+import { LINK_PATTERNS } from './consts/link-patterns.const';
+import { LinkPatternType } from './types/link-pattern-type.enum';
+import { ClickUpUrlParser } from '../utils/clickup-url-parser.class';
 
 /**
  * Parses ClickUp and Markdown links from content using markdown-it.
@@ -52,6 +54,7 @@ export class LinkParser {
                             const parsedLink = this.parseLinkUrl({ url: href || '', text });
 
                             if (parsedLink) {
+                                // References a doc/page either current or now
                                 if (parsedLink.text === parsedLink.url && parsedLink.type === LinkType.LINKED_PAGE) {
                                     await ClickupSyncWiki.run({ url: parsedLink.url });
                                 }
@@ -92,22 +95,13 @@ export class LinkParser {
             return null;
         }
 
-        for (const key of Object.keys(LINK_PATTERNS)) {
-            const { regex, type, keys } = LINK_PATTERNS[key];
-            const match = url.match(regex);
-            if (match) {
-                const record: ParsedLink = {
-                    type,
-                    text,
-                    url,
-                };
-                keys.forEach((k: keyof ParsedLink, idx: number) => {
-                    (record as any)[k] = match[idx + 1];
-                });
-                return record;
-            }
+        // Try ClickUp link patterns first
+        const clickupParsed = ClickUpUrlParser.parse({ url, text });
+        if (clickupParsed) {
+            return clickupParsed;
         }
 
+        // Handle local/relative markdown links
         if (url.startsWith('.') || url.includes('.md')) {
             return {
                 type: LinkType.EXTERNAL,
@@ -116,6 +110,7 @@ export class LinkParser {
             };
         }
 
+        // Fallback: unknown link type
         return {
             type: LinkType.UNKNOWN,
             text,

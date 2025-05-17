@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LINK_PATTERNS } from '../src/markdown/link-patterns.const';
+import { LINK_PATTERNS } from '../src/markdown/consts/link-patterns.const';
 
 describe('LINK_PATTERNS', () => {
     it('matches doc url', () => {
