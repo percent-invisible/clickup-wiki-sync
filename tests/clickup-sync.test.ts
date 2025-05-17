@@ -12,7 +12,7 @@ vi.mock('../src/filesystem/sync-wiki.class', () => ({
         syncDocTree() {
             return Promise.resolve({
                 pageMapping: {},
-                docPath: '.clickup-test/doc-folder'
+                docPath: '.clickup-test/doc-folder',
             });
         }
     },
@@ -31,7 +31,7 @@ vi.mock('../src/config/config.loader', () => ({
 describe('ClickUpUrlParser', () => {
     it('parses doc url', () => {
         const url = 'https://app.clickup.com/123/v/dc/abc';
-        const parsed = ClickUpUrlParser.parse({ url });
+        const parsed = ClickUpUrlParser.parse({ url, text: 'abc' });
         expect(parsed).toMatchObject({
             type: expect.any(String),
             workspaceId: '123',
@@ -41,7 +41,7 @@ describe('ClickUpUrlParser', () => {
     });
     it('parses page url', () => {
         const url = 'https://app.clickup.com/123/v/dc/abc/def';
-        const parsed = ClickUpUrlParser.parse({ url });
+        const parsed = ClickUpUrlParser.parse({ url, text: 'def' });
         expect(parsed).toMatchObject({
             type: expect.any(String),
             workspaceId: '123',
@@ -52,7 +52,7 @@ describe('ClickUpUrlParser', () => {
     });
     it('parses linked page url', () => {
         const url = 'https://app.clickup.com/123/docs/abc/def';
-        const parsed = ClickUpUrlParser.parse({ url });
+        const parsed = ClickUpUrlParser.parse({ url, text: 'def' });
         expect(parsed).toMatchObject({
             type: expect.any(String),
             workspaceId: '123',
@@ -62,7 +62,7 @@ describe('ClickUpUrlParser', () => {
         });
     });
     it('returns null for invalid url', () => {
-        expect(ClickUpUrlParser.parse({ url: 'https://google.com' })).toBeNull();
+        expect(ClickUpUrlParser.parse({ url: 'https://google.com', text: 'google' })).toBeNull();
     });
 });
 
