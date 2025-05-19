@@ -2,6 +2,6 @@ export enum LinkPatternType {
     DOC = 'DOC',
     PAGE = 'PAGE',
     LINKED_PAGE = 'LINKED_PAGE',
-    LINKED_PAGE_WITH_QUERY = 'LINKED_PAGE_WITH_QUERY',
     TABLE_CELL_LINK = 'TABLE_CELL_LINK',
+    BLOCK_LINK = 'BLOCK_LINK',
 }

@@ -27,16 +27,16 @@ export const LINK_PATTERNS: Record<
         type: LinkType.LINKED_PAGE,
         keys: ['workspaceId', 'documentId', 'pageId'],
     },
-    // Add specific pattern for date field links with query parameters
-    LINKED_PAGE_WITH_QUERY: {
-        regex: /https:\/\/app\.clickup\.com\/([^\/]+)\/docs\/([^\/]+)\/([^\/]+)\?block=.*$/,
-        type: LinkType.LINKED_PAGE,
-        keys: ['workspaceId', 'documentId', 'pageId'],
-    },
     // Add a more relaxed pattern to catch field type links and other variations
     TABLE_CELL_LINK: {
         regex: /https:\/\/app\.clickup\.com\/([^\/]+)\/v?\/(?:dc|docs)\/([^\/\?]+)(?:\/([^\/\?]+))?/,
         type: LinkType.LINKED_PAGE,
+        keys: ['workspaceId', 'documentId', 'pageId'],
+    },
+    // Specific pattern for block links
+    BLOCK_LINK: {
+        regex: /https:\/\/app\.clickup\.com\/([^\/]+)\/v\/dc\/([^\/]+)\/([^\/]+)\?block=([\w-]+)/,
+        type: LinkType.PAGE,
         keys: ['workspaceId', 'documentId', 'pageId'],
     },
 };

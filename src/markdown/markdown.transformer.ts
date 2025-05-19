@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { PageMapping } from '../filesystem/types';
-import { ParsedLink } from '../types';
 import { LinkType } from '../types/link-type.enum';
+import { LINK_PATTERNS } from './consts/link-patterns.const';
 import { LinkParser } from './link-parser.class';
 import { LinkHandlerFn, LinkReplacementInfo, TransformResult } from './types';
 
@@ -34,7 +34,18 @@ export class MarkdownTransformer {
         const currentDir = path.dirname(currentFilePath);
         const replacedLinks: LinkReplacementInfo[] = [];
 
-        for (const link of links) {
+        // Replace all ClickUp links in the content using the precomputed regex
+        transformedContent = transformedContent.replace(this.CLICKUP_URL_REGEX, (match, text, ...groups) => {
+            // Find which regex matched
+            const url =
+                groups.slice(0, this.CLICKUP_URL_PATTERNS.length).find(Boolean) +
+                (groups[this.CLICKUP_URL_PATTERNS.length] || '');
+            const link = links.find((l) => l.url === url);
+            if (!link) {
+                return match;
+            }
+
+            // Determine the lookup id and local path
             const lookupId =
                 link.type === LinkType.DOC && link.documentId && pageMapping[link.documentId]
                     ? link.documentId
@@ -45,47 +56,36 @@ export class MarkdownTransformer {
                       : null;
 
             if (lookupId == null) {
-                continue;
+                return match;
             }
 
             let localLink: string = path.relative(currentDir, pageMapping[lookupId].path);
             const pageName: string = pageMapping[lookupId].name;
-
-            if (localLink) {
-                if (!localLink.startsWith('.')) {
-                    localLink = './' + localLink;
-                }
-
-                let newText = link.text;
-                if (pageName) {
-                    newText = pageName;
-                } else if (!newText && [LinkType.PAGE, LinkType.LINKED_PAGE, LinkType.DOC].includes(link.type)) {
-                    newText = 'Untitled';
-                }
-                const pattern = new RegExp(
-                    `\\[${this.escapeRegExp(link.text)}\\]\\(${this.escapeRegExp(link.url)}\\)`,
-                    'g',
-                );
-                transformedContent = transformedContent.replace(pattern, `[${newText}](${localLink})`);
-                
-                // If diagnostics are requested, record details about this replacement
-                if (diagnoseLinks) {
-                    replacedLinks.push({
-                        text: link.text,
-                        newText,
-                        originalUrl: link.url,
-                        localLink,
-                        pageId: link.pageId,
-                        documentId: link.documentId,
-                    });
-                }
+            if (!localLink.startsWith('.')) {
+                localLink = './' + localLink;
             }
-        }
+            let newText = text;
+            if (pageName) {
+                newText = pageName;
+            } else if (!newText && [LinkType.PAGE, LinkType.LINKED_PAGE, LinkType.DOC].includes(link.type)) {
+                newText = 'Untitled';
+            }
+
+            if (diagnoseLinks) {
+                replacedLinks.push({
+                    text: link.text,
+                    newText,
+                    originalUrl: link.url,
+                    localLink,
+                    pageId: link.pageId,
+                    documentId: link.documentId,
+                });
+            }
+            return `[${newText}](${localLink})`;
+        });
 
         // Return diagnostics if requested, otherwise just the transformed content
-        return diagnoseLinks 
-            ? { transformedContent, replacedLinks } 
-            : transformedContent;
+        return diagnoseLinks ? { transformedContent, replacedLinks } : transformedContent;
     }
 
     /**
@@ -109,23 +109,23 @@ export class MarkdownTransformer {
         },
     };
 
-    private createLocalLink({
-        link,
-        basePath,
-        pageMapping,
-    }: {
-        link: ParsedLink;
-        basePath: string;
-        pageMapping: Record<string, { path: string; name: string }>;
-    }): string | null {
-        // Use enum for key lookup
-        return MarkdownTransformer.LOCAL_LINK_HANDLERS[link.type]?.({ link, basePath, pageMapping }) ?? null;
-    }
+    /**
+     * Precompute ClickUp URL patterns and regex for markdown links
+     */
+    private readonly CLICKUP_URL_PATTERNS: string[] = Object.values(LinkType)
+        .filter((type) => type !== LinkType.EXTERNAL && type !== LinkType.UNKNOWN)
+        .map((type) => {
+            return Object.values(LINK_PATTERNS)
+                .filter((p: any) => p.type === type)
+                .map((p: any) => p.regex.source);
+        })
+        .flat();
 
     /**
-     * Escapes special characters for use in a regular expression.
+     * Precomputed regex for ClickUp URL patterns in markdown links
      */
-    private escapeRegExp(str: string): string {
-        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
+    private readonly CLICKUP_URL_REGEX = new RegExp(
+        String.raw`\[([^\]]*)\]\(((${this.CLICKUP_URL_PATTERNS.join(')|(')}))(\?[^\)]*)?\)`,
+        'g',
+    );
 }
