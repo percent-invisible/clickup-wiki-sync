@@ -220,7 +220,14 @@ export class LinkTransformer {
             
             // Determine what text to use (preserve original if available)
             let newText = text;
+            
+            // If the text is empty, use the page name
             if (!newText && mapping.name) {
+                newText = mapping.name;
+            }
+            
+            // If the text is a URL (happens in ClickUp exports), use the page name instead
+            if (text.startsWith('https://app.clickup.com/') && mapping.name) {
                 newText = mapping.name;
             }
             
@@ -234,9 +241,15 @@ export class LinkTransformer {
                 documentId: link.documentId,
             });
             
-            // Replace only the URL part, preserving the exact text part
-            // This is critical for WYSIWYG compliance
-            return `${textPart}(${localPath})`;
+            // If we need to replace the text part (empty or URL text)
+            if (newText !== text) {
+                // Replace both text and URL parts
+                return `[${newText}](${localPath})`;
+            } else {
+                // Replace only the URL part, preserving the exact text part
+                // This is critical for WYSIWYG compliance
+                return `${textPart}(${localPath})`;
+            }
         });
     }
 
