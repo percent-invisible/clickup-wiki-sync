@@ -28,9 +28,11 @@ export interface PageCatalogEntry {
     name: string;
     
     /**
-     * The local file path where the page is written.
+     * The absolute file path where the page is written.
+     * This is the ONLY path property to be used for any logic or calculation.
+     * Never use relative paths from the catalog for any computation.
      */
-    path: string;
+    absolutePath: string;
     
     /**
      * Optional parent page ID for nested pages.

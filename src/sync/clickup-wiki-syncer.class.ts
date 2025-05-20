@@ -116,7 +116,7 @@ export class ClickupWikiSyncer {
                     filePath: path.join(this.outputDir, 'catalog-debug.json'),
                 });
             }
-            
+
             // Phase 2: Transform links in all documents
             await this.transformLinks();
             
@@ -289,7 +289,7 @@ export class ClickupWikiSyncer {
      * Adds page mapping entries to the catalog.
      */
     private addPageMappingToCatalog(options: {
-        pageMapping: Record<string, { path: string; name: string }>;
+        pageMapping: Record<string, { absolutePath: string; name: string }>;
         documentId: string;
         workspaceId: string;
     }): void {
@@ -324,7 +324,7 @@ export class ClickupWikiSyncer {
                     workspaceId,
                     clickupUrl,
                     name: value.name,
-                    path: value.path,
+                    absolutePath: value.absolutePath,
                 },
             });
         }
@@ -360,7 +360,7 @@ export class ClickupWikiSyncer {
      */
     private async transformFileLinks(options: {
         filePath: string;
-        pageMapping: Record<string, { path: string; name: string }>;
+        pageMapping: Record<string, { absolutePath: string; name: string }>;
     }): Promise<void> {
         const { filePath, pageMapping } = options;
         

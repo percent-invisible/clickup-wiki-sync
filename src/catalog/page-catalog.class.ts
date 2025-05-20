@@ -80,7 +80,7 @@ export class PageCatalog {
         // Add all page entries
         for (const [pageId, entry] of this.entriesByPageId.entries()) {
             mapping[pageId] = {
-                path: entry.path,
+                absolutePath: entry.absolutePath,
                 name: entry.name,
             };
         }
@@ -92,7 +92,7 @@ export class PageCatalog {
                 
                 // Create a document-level entry using the document's root page
                 mapping[docId] = {
-                    path: rootEntry.path,
+                    absolutePath: rootEntry.absolutePath,
                     name: rootEntry.name,
                 };
             }

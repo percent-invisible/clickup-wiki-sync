@@ -50,11 +50,12 @@ export class WikiFileSystem {
         // If document has its own content, write it as index.md
         if (doc.content) {
             const indexPath = join(docPath, 'index.md');
-            await fs.writeFile(indexPath, doc.content, 'utf-8');
+            await fs.writeFile( doc.content, 'utf-8');
             
             // Add document to page mapping
             pageMapping[doc.id] = {
-                path: indexPath,
+                
+                absolutePath: resolve(indexPath),
                 name: doc.name
             };
             pageCount++;
@@ -103,11 +104,15 @@ export class WikiFileSystem {
         
         // Determine the file path
         const mdFilePath = `${pagePath}.md`;
-        const relMdFilePath = parentPath ? join(parentPath, `${pageName}.md`) : mdFilePath;
 
-        // Add page to mapping
+        // Write the page content
+        console.log(`Writing page "${page.name}" to ${mdFilePath}`);
+        await fs.writeFile(mdFilePath, page.content || '', 'utf-8');
+        pageCount++;
+
+        // Add page to mapping using the actual written location
         pageMapping[page.id] = {
-            path: relMdFilePath,
+            absolutePath: resolve(mdFilePath),
             name: page.name
         };
         
@@ -115,15 +120,10 @@ export class WikiFileSystem {
         if (workspaceId) {
             const pageUrl = `https://app.clickup.com/${workspaceId}/v/dc/${docId}/${page.id}`;
             pageMapping[pageUrl] = {
-                path: relMdFilePath,
+                absolutePath: resolve(mdFilePath),
                 name: page.name
             };
         }
-
-        // Write the page content
-        console.log(`Writing page "${page.name}" to ${mdFilePath}`);
-        await fs.writeFile(mdFilePath, page.content || '', 'utf-8');
-        pageCount++;
 
         // If page has children, create a directory and write them
         if (page.pages && page.pages.length > 0) {

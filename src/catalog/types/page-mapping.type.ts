@@ -6,9 +6,11 @@
  */
 export type PageMapping = Record<string, {
     /**
-     * Local file path where the page is written.
+     * Absolute file path where the page is written.
+     * This is the ONLY path property to be used for any logic or calculation.
+     * Never use relative paths from the mapping for any computation.
      */
-    path: string;
+    absolutePath: string;
     
     /**
      * Name of the page for use in link text when original is empty.

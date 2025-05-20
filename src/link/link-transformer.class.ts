@@ -1,4 +1,4 @@
-import { relative, dirname } from 'path';
+import { relative, dirname, resolve, basename } from 'path';
 import { ParsedLink, TransformResult, LINK_TYPE } from './types';
 import { LinkParser } from './link-parser.class';
 import { PageMapping } from '../catalog/types';
@@ -36,7 +36,12 @@ export class LinkTransformer {
         // Parse all links in the content
         const links = await this.linkParser.parseLinks({ content });
         let transformedContent = content;
+        
+        // Get both relative dirname and absolute path for accurate path calculations
         const currentDir = dirname(currentFilePath);
+        // Ensure we have the full absolute path for accurate path calculations
+        const currentAbsoluteDir = resolve(currentDir);
+        
         const replacedLinks: any[] = [];
 
         // Only proceed if we found links and have a page mapping
@@ -50,6 +55,7 @@ export class LinkTransformer {
             links,
             pageMapping,
             currentDir,
+            currentAbsoluteDir,
             replacedLinks,
         });
 
@@ -59,6 +65,7 @@ export class LinkTransformer {
             links,
             pageMapping,
             currentDir,
+            currentAbsoluteDir,
             replacedLinks,
         });
 
@@ -68,6 +75,7 @@ export class LinkTransformer {
             links,
             pageMapping,
             currentDir,
+            currentAbsoluteDir,
             replacedLinks,
         });
 
@@ -75,6 +83,83 @@ export class LinkTransformer {
         return diagnoseLinks 
             ? { transformedContent, replacedLinks } 
             : transformedContent;
+    }
+
+    /**
+     * Finds the appropriate target ID for a link in the page mapping.
+     * Attempts to match based on URL, page ID, document ID, and more advanced matching.
+     */
+    private findTargetIdForLink(link: ParsedLink, pageMapping: PageMapping): string | null {
+        const keys = Object.keys(pageMapping);
+        
+        // Step 1: Try to find an exact match with the complete URL
+        // This is the most reliable way to match a link to its target
+        for (const key of keys) {
+            if (key === link.url) {
+                return key;
+            }
+        }
+        
+        // Step 2: For page-specific links, match both documentId and pageId
+        if (link.pageId && link.documentId) {
+            // Try to find a direct match by comparing the keys
+            // Use the clickupUrl if available, as it may contain both IDs
+            for (const key of keys) {
+                const entry = pageMapping[key];
+                
+                // If the key contains both the document ID and page ID, it's likely a match
+                if (link.documentId && 
+                    link.pageId && 
+                    key.includes(link.documentId) && 
+                    key.includes(link.pageId)) {
+                    return key;
+                }
+            }
+        }
+        
+        // Step 3: For page-specific links, try matching just the page ID
+        // This is helpful for links within the same document
+        if (link.pageId) {
+            for (const key of keys) {
+                if (link.pageId && key.includes(link.pageId)) {
+                    return key;
+                }
+            }
+        }
+        
+        // Step 4: For document-only links, try to find a match with the document ID
+        if (link.documentId) {
+            for (const key of keys) {
+                // For document IDs, prefer keys that don't have a page ID component
+                // This helps match document links to the root document, not a specific page
+                if (link.documentId && 
+                    key.includes(link.documentId) && 
+                    !key.includes('_')) {
+                    return key;
+                }
+            }
+            
+            // Fallback: Try any key with the document ID if we can't find a better match
+            for (const key of keys) {
+                if (link.documentId && key.includes(link.documentId)) {
+                    return key;
+                }
+            }
+        }
+        
+        // Step 5: Final fallback - try to match by the URL pattern
+        const urlParts = link.url.split('/');
+        const lastUrlPart = urlParts[urlParts.length - 1];
+        
+        if (lastUrlPart && lastUrlPart.length > 5) {
+            for (const key of keys) {
+                if (key.includes(lastUrlPart)) {
+                    return key;
+                }
+            }
+        }
+        
+        return null;
     }
 
     /**
@@ -86,9 +171,10 @@ export class LinkTransformer {
         links: ParsedLink[];
         pageMapping: PageMapping;
         currentDir: string;
+        currentAbsoluteDir: string;
         replacedLinks: any[];
     }): string {
-        const { content, links, pageMapping, currentDir, replacedLinks } = options;
+        const { content, links, pageMapping, currentDir, currentAbsoluteDir, replacedLinks } = options;
         
         // Use a regex that captures the full markdown link pattern
         // The capture groups allow us to preserve text formatting while only replacing the URL
@@ -115,8 +201,13 @@ export class LinkTransformer {
             // Get the mapping info
             const mapping = pageMapping[targetId];
             
-            // Calculate relative path from current file to target
-            let localPath = relative(currentDir, mapping.path);
+            const currentFileAbsoluteDir = currentAbsoluteDir;
+            let localPath;
+            
+            // Calculate relative path from current file directory to target file
+            // This ensures we get the full, correct path between documents
+            localPath = relative(currentFileAbsoluteDir, mapping.absolutePath);
+            
             if (!localPath.startsWith('.')) {
                 localPath = './' + localPath;
             }
@@ -157,9 +248,10 @@ export class LinkTransformer {
         links: ParsedLink[];
         pageMapping: PageMapping;
         currentDir: string;
+        currentAbsoluteDir: string;
         replacedLinks: any[];
     }): string {
-        const { content, links, pageMapping, currentDir, replacedLinks } = options;
+        const { content, links, pageMapping, currentDir, currentAbsoluteDir, replacedLinks } = options;
         
         // First, identify table rows
         const tableRowRegex = /^\s*\|.*\|.*\n/gm;
@@ -171,6 +263,7 @@ export class LinkTransformer {
                 links,
                 pageMapping,
                 currentDir,
+                currentAbsoluteDir,
                 replacedLinks,
             });
         });
@@ -184,9 +277,10 @@ export class LinkTransformer {
         links: ParsedLink[];
         pageMapping: PageMapping;
         currentDir: string;
+        currentAbsoluteDir: string;
         replacedLinks: any[];
     }): string {
-        const { content, links, pageMapping, currentDir, replacedLinks } = options;
+        const { content, links, pageMapping, currentDir, currentAbsoluteDir, replacedLinks } = options;
         
         // Handle more complex nested patterns - find outer link patterns first
         const nestedLinkRegex = /\[([^\]]*)\]\((\[[^\]]*\]\([^)]+\))\)/g;
@@ -198,6 +292,7 @@ export class LinkTransformer {
                 links,
                 pageMapping,
                 currentDir,
+                currentAbsoluteDir,
                 replacedLinks,
             });
             
@@ -206,25 +301,5 @@ export class LinkTransformer {
         });
     }
 
-    /**
-     * Finds the appropriate target ID (page ID or document ID) for a link in the page mapping.
-     */
-    private findTargetIdForLink(link: ParsedLink, pageMapping: PageMapping): string | null {
-        // Check if we have a direct mapping for the URL
-        if (pageMapping[link.url]) {
-            return link.url;
-        }
-        
-        // Check for page ID mapping
-        if (link.pageId && pageMapping[link.pageId]) {
-            return link.pageId;
-        }
-        
-        // Check for document ID mapping
-        if (link.documentId && pageMapping[link.documentId]) {
-            return link.documentId;
-        }
-        
-        return null;
-    }
+
 }
