@@ -1,0 +1,5 @@
+clickup:
+  apiKey: "YOUR_API_KEY"  # This will be overridden by environment variable in CI
+  outputPath: ".clickup"
+  maxPageFetchDepth: 3
+  debug: true  # Enable debug for more detailed logging during tests

@@ -161,7 +161,7 @@ export class ClickupWikiSyncer {
         }
         
         // Check depth limit
-        if (currentDepth > this.maxDepth) {
+        if (currentDepth > this.maxDepth && this.maxDepth !== -1) {
             console.log(`Reached maximum depth (${this.maxDepth}), stopping recursion`);
             return;
         }
@@ -264,13 +264,24 @@ export class ClickupWikiSyncer {
         
         // Sync all referenced documents recursively
         for (const docId of docIds) {
-            await this.syncDocuments({
-                initialUrl,
-                workspaceId,
-                documentId: docId,
-                currentDepth,
-                previousDocs,
-            });
+            try {
+                await this.syncDocuments({
+                    initialUrl,
+                    workspaceId,
+                    documentId: docId,
+                    currentDepth,
+                    previousDocs,
+                });
+            } catch (error: unknown) {
+                // Log error but continue with other documents
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                console.warn(`Could not sync referenced document ${docId}: ${errorMessage}`);
+                if (this.debug) {
+                    console.debug('Reference error details:', error);
+                }
+                // Continue with other documents rather than failing the entire process
+                continue;
+            }
         }
     }
 

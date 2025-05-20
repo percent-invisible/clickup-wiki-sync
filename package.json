@@ -17,7 +17,11 @@
     "cli": "node dist/index.js",
     "sync-wiki": "npm run build && node dist/index.js sync",
     "clean": "rm -rf dist",
-    "test": "vitest run"
+    "test": "vitest run",
+    "validate": "npm run build && npm run validate:output && npm run validate:links && npm run validate:structure",
+    "validate:output": "npm run build && ts-node tests/validation/output-comparison.test.ts",
+    "validate:links": "npm run build && vitest run tests/validation/link-transformation.test.ts",
+    "validate:structure": "npm run build && vitest run tests/validation/directory-structure.test.ts"
   },
   "dependencies": {
     "@esbuild/darwin-arm64": "^0.25.4",
