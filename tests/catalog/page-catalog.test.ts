@@ -13,7 +13,7 @@ describe('PageCatalog', () => {
             workspaceId: 'workspace-1',
             clickupUrl: 'https://app.clickup.com/workspace-1/v/dc/doc-abc/page-123',
             name: 'Test Page',
-            path: '/wiki/Doc_Title/Test_Page.md'
+            absolutePath: '/wiki/Doc_Title/Test_Page.md'
         },
         {
             pageId: 'page-456',
@@ -21,7 +21,7 @@ describe('PageCatalog', () => {
             workspaceId: 'workspace-1',
             clickupUrl: 'https://app.clickup.com/workspace-1/v/dc/doc-abc/page-456',
             name: 'Child Page',
-            path: '/wiki/Doc_Title/Test_Page/Child_Page.md',
+            absolutePath: '/wiki/Doc_Title/Test_Page/Child_Page.md',
             parentPageId: 'page-123'
         },
         {
@@ -30,7 +30,7 @@ describe('PageCatalog', () => {
             workspaceId: 'workspace-1',
             clickupUrl: 'https://app.clickup.com/workspace-1/v/dc/doc-def/page-789',
             name: 'Another Doc Page',
-            path: '/wiki/Another_Doc/Another_Doc_Page.md'
+            absolutePath: '/wiki/Another_Doc/Another_Doc_Page.md'
         }
     ];
     
@@ -100,8 +100,8 @@ describe('PageCatalog', () => {
             expect(mapping['doc-abc']).toBeDefined();
             expect(mapping['doc-def']).toBeDefined();
             
-            // Should have correct paths
-            expect(mapping['page-123'].path).toBe('/wiki/Doc_Title/Test_Page.md');
+            // Should have correct absolute paths
+            expect(mapping['page-123'].absolutePath).toBe('/wiki/Doc_Title/Test_Page.md');
             
             // Should have correct names for empty link text replacement
             expect(mapping['page-456'].name).toBe('Child Page');

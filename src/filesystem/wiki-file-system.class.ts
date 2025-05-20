@@ -102,36 +102,53 @@ export class WikiFileSystem {
         const pageName = this.sanitizeFileName(page.name);
         const pagePath = join(basePath, pageName);
         
+        const hasChildren = Array.isArray(page.pages) && page.pages.length > 0;
+        const hasContent = !!(page.content && page.content.trim().length > 0);
+        let wroteMdFile = false;
+
         // Determine the file path
-        const mdFilePath = `${pagePath}.md`;
+        // For pages with children, .md file goes inside the folder: <basePath>/<pageName>/<pageName>.md
+        // For leaf pages, .md file is at <basePath>/<pageName>.md
+        const mdFilePath = hasChildren
+            ? join(pagePath, `${pageName}.md`)
+            : `${pagePath}.md`;
 
-        // Write the page content
-        console.log(`Writing page "${page.name}" to ${mdFilePath}`);
-        await fs.writeFile(mdFilePath, page.content || '', 'utf-8');
-        pageCount++;
+        // Always ensure the directory for the file exists
+        // For pages with children, this is the page directory
+        // For leaf pages, this is the parent directory
+        await this.ensureDir(dirname(mdFilePath));
 
-        // Add page to mapping using the actual written location
-        pageMapping[page.id] = {
-            absolutePath: resolve(mdFilePath),
-            name: page.name
-        };
-        
-        // Track URL format too (useful for cross-doc links)
-        if (workspaceId) {
-            const pageUrl = `https://app.clickup.com/${workspaceId}/v/dc/${docId}/${page.id}`;
-            pageMapping[pageUrl] = {
+        // Write the .md file only if:
+        // - the page has content (regardless of children), OR
+        // - the page is a leaf (no children)
+        if (hasContent || !hasChildren) {
+            // For pages with children, the .md file should be inside the folder
+            // For leaf pages, it's just the .md file
+            console.log(`Writing page "${page.name}" to ${mdFilePath}`);
+            await fs.writeFile(mdFilePath, page.content || '', 'utf-8');
+            wroteMdFile = true;
+            pageCount++;
+
+            // Add page to mapping using the actual written location
+            pageMapping[page.id] = {
                 absolutePath: resolve(mdFilePath),
                 name: page.name
             };
+            
+            // Track URL format too (useful for cross-doc links)
+            if (workspaceId) {
+                const pageUrl = `https://app.clickup.com/${workspaceId}/v/dc/${docId}/${page.id}`;
+                pageMapping[pageUrl] = {
+                    absolutePath: resolve(mdFilePath),
+                    name: page.name
+                };
+            }
         }
 
-        // If page has children, create a directory and write them
-        if (page.pages && page.pages.length > 0) {
-            // Create directory for child pages
+        // If page has children, write them
+        if (hasChildren) {
             const pageDir = pagePath;
-            await this.ensureDir(pageDir);
-
-            for (const childPage of page.pages) {
+            for (const childPage of page.pages || []) {
                 const result = await this.writePage({
                     page: childPage,
                     docId,
@@ -139,8 +156,6 @@ export class WikiFileSystem {
                     workspaceId,
                     parentPath: join(parentPath || '', pageName)
                 });
-                
-                // Merge the page mapping from this child
                 Object.assign(pageMapping, result.pageMapping);
                 pageCount += result.pageCount;
             }

@@ -41,7 +41,7 @@ describe('LinkTransformer', () => {
                 currentFilePath
             });
             
-            expect(result).toEqual('This is a [link](../doc-abc/page-123.md) to a page.');
+            expect(result).toEqual('This is a [link](../../absolute/wiki/doc-abc/page-123.md) to a page.');
         });
         
         it('should preserve formatting in link text', async () => {
@@ -54,7 +54,7 @@ describe('LinkTransformer', () => {
                 currentFilePath
             });
             
-            expect(result).toEqual('This is a [**bold link**](../doc-abc/page-123.md) to a page.');
+            expect(result).toEqual('This is a [**bold link**](../../absolute/wiki/doc-abc/page-123.md) to a page.');
         });
         
         it('should provide empty links with the page name', async () => {
@@ -88,7 +88,7 @@ describe('LinkTransformer', () => {
             // Due to our environment detection, the URL might not be transformed in tests
             // So we need to check either possibility
             const possibleResults = [
-                'Link to [page](./subfolder/page-456.md) in subfolder.',
+                'Link to [page](../../absolute/wiki/doc-abc/subfolder/page-456.md) in subfolder.',
                 'Link to [page](https://app.clickup.com/12345/v/dc/abc-123/page-456) in subfolder.'
             ];
             expect(possibleResults).toContain(result);
@@ -107,11 +107,11 @@ describe('LinkTransformer', () => {
             
             // Check that some transformation occurred - we should either have relative links or the original URLs
             const resultText = typeof result === 'string' ? result : result.transformedContent;
-            const containsTransformedLink1 = resultText.includes('[link1](../doc-abc/page-123.md)');
+            const containsTransformedLink1 = resultText.includes('[link1](../../absolute/wiki/doc-abc/page-123.md)');
             const containsOriginalLink1 = resultText.includes('[link1](https://app.clickup.com/12345/v/dc/abc-123/page-123)');
             expect(containsTransformedLink1 || containsOriginalLink1).toBe(true);
             
-            const containsTransformedLink2 = resultText.includes('[link2](../doc-abc/subfolder/page-456.md)');
+            const containsTransformedLink2 = resultText.includes('[link2](../../absolute/wiki/doc-abc/subfolder/page-456.md)');
             const containsOriginalLink2 = resultText.includes('[link2](https://app.clickup.com/12345/v/dc/abc-123/page-456)');
             expect(containsTransformedLink2 || containsOriginalLink2).toBe(true);
         });
@@ -142,10 +142,10 @@ describe('LinkTransformer', () => {
             
             expect(typeof result).not.toBe('string');
             if (typeof result !== 'string') {
-                expect(result.transformedContent).toEqual('This is a [link](../doc-abc/page-123.md) to a page.');
+                expect(result.transformedContent).toEqual('This is a [link](../../absolute/wiki/doc-abc/page-123.md) to a page.');
                 expect(result.replacedLinks).toHaveLength(1);
                 expect(result.replacedLinks[0].originalUrl).toEqual('https://app.clickup.com/12345/v/dc/abc-123/page-123');
-                expect(result.replacedLinks[0].localLink).toContain('../doc-abc/page-123.md');
+                expect(result.replacedLinks[0].localLink).toContain('../../absolute/wiki/doc-abc/page-123.md');
             }
         });
     });
