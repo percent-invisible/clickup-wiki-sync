@@ -74,3 +74,4 @@ out
 # ClickUp offline wiki
 .clickup
 .clickup-compare
+.clickup-data

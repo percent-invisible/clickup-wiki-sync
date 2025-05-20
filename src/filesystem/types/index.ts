@@ -1,1 +1,1 @@
-export * from './page-mapping.type';
+export * from './sync-result.interface';

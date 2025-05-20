@@ -1,36 +1,64 @@
-import { LINK_PATTERNS } from '../markdown/consts/link-patterns.const';
-import { LinkPatternType } from '../markdown/types/link-pattern-type.enum';
-import { LinkType, ParsedLink } from '../types';
+import { ParsedLink, LINK_TYPE } from '../link/types';
+import { LINK_PATTERNS } from '../link/consts/link-patterns.const';
 
 /**
- * Extracts workspaceId, documentId, and pageId from a ClickUp doc/page URL.
- * Returns null if the URL does not match any supported pattern.
+ * Parses ClickUp URLs to extract workspace, document, and page IDs.
  */
-export class ClickUpUrlParser {
+export class ClickupUrlParser {
+    /**
+     * Parses a ClickUp URL and extracts identifiers.
+     */
     public static parse(options: { url: string; text: string }): ParsedLink | null {
         const { url, text } = options;
-
-        // Skip image links: ![](url)
-        if (text === '' && url.match(/\.(png|jpg|jpeg|gif|svg|webp)$/i)) {
+        
+        if (!url) {
             return null;
         }
-
-        for (const key of Object.keys(LINK_PATTERNS)) {
-            const { regex, type, keys } = LINK_PATTERNS[key as LinkPatternType];
-            const match = url.match(regex);
+        
+        // Clean the URL by removing block references or other parameters
+        const cleanUrl = this.cleanUrl(url);
+        
+        // Try each pattern to find a match
+        for (const pattern of Object.values(LINK_PATTERNS)) {
+            const match = cleanUrl.match(pattern.regex);
+            
             if (match) {
-                const record: ParsedLink = {
-                    type,
+                // Create base parsed link
+                const parsedLink: ParsedLink = {
+                    url: cleanUrl,
                     text,
-                    url,
+                    type: pattern.type,
                 };
-                keys.forEach((k: keyof ParsedLink, idx: number) => {
-                    (record as any)[k] = match[idx + 1];
-                });
-                return record;
+                
+                // Extract capture groups if present
+                if (pattern.captureGroups && match.length > 1) {
+                    // Skip full match at index 0
+                    for (let i = 1; i < match.length; i++) {
+                        const groupName = pattern.captureGroups[i - 1];
+                        if (groupName) {
+                            // TypeScript requires this approach for dynamic property assignment
+                            (parsedLink as any)[groupName] = match[i];
+                        }
+                    }
+                }
+                
+                return parsedLink;
             }
         }
-
-        return null;
+        
+        // If no pattern matched, return as an external/unknown link
+        return {
+            url: cleanUrl,
+            text,
+            type: LINK_TYPE.EXTERNAL,
+        };
+    }
+    
+    /**
+     * Cleans a URL by removing block references and other unnecessary parts.
+     */
+    private static cleanUrl(url: string): string {
+        // Remove block references (e.g., ?block=block-xxxxx)
+        return url.replace(/\?block=[^)]+/, '');
     }
 }

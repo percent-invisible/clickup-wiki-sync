@@ -14,18 +14,21 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "dev": "tsc --watch --project tsconfig.json",
-    "run:cli": "node dist/cli/sync-wiki.cli.js",
-    "sync-wiki": "npm run build && npm run run:cli",
+    "cli": "node dist/index.js",
+    "sync-wiki": "npm run build && node dist/index.js sync",
     "clean": "rm -rf dist",
     "test": "vitest run"
   },
   "dependencies": {
+    "@esbuild/darwin-arm64": "^0.25.4",
     "axios": "^1.6.7",
+    "commander": "^11.1.0",
     "fs-extra": "^11.2.0",
     "js-yaml": "^3.14.1",
     "markdown-it": "^12.3.2"
   },
   "devDependencies": {
+    "@types/commander": "^2.12.2",
     "@types/fs-extra": "^11.0.4",
     "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^13.0.7",
@@ -37,7 +40,7 @@
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.2.5",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.0",
+    "typescript": "~4.9.5",
     "vitest": "^1.6.1"
   }
 }
