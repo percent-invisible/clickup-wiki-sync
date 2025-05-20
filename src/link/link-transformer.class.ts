@@ -92,10 +92,10 @@ export class LinkTransformer {
     private findTargetIdForLink(link: ParsedLink, pageMapping: PageMapping): string | null {
         const keys = Object.keys(pageMapping);
         
-        // Step 1: Try to find an exact match with the complete URL
+        // Step 1: Try to find an exact match with the complete URL (cleaned or original)
         // This is the most reliable way to match a link to its target
         for (const key of keys) {
-            if (key === link.url) {
+            if (key === link.url || key === link.originalUrl) {
                 return key;
             }
         }
@@ -181,8 +181,8 @@ export class LinkTransformer {
         const markdownLinkRegex = /(\[([^\]]*)\])(\(([^)]+)\))/g;
         
         return content.replace(markdownLinkRegex, (match, textPart, text, urlPart, url) => {
-            // Find the corresponding parsed link
-            const link = links.find(l => l.url === url);
+            // Find the corresponding parsed link - check both cleaned and original URLs
+            const link = links.find(l => l.url === url || l.originalUrl === url);
             if (!link) {
                 return match; // Not a link we parsed, leave unchanged
             }
@@ -216,6 +216,14 @@ export class LinkTransformer {
             const anchorMatch = url.match(/#[^)]+$/);
             if (anchorMatch) {
                 localPath += anchorMatch[0];
+            }
+            
+            // Preserve block references if present in the original URL
+            if (link.blockReference) {
+                // If there's already an anchor, don't add a block reference
+                if (!anchorMatch) {
+                    localPath += `?block=${link.blockReference}`;
+                }
             }
             
             // Determine what text to use (preserve original if available)

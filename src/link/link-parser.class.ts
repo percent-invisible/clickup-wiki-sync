@@ -47,6 +47,9 @@ export class LinkParser {
     }): ParsedLink {
         const { text, url, fullMatch } = options;
         
+        // Store the original URL with any block references
+        const originalUrl = url;
+        
         // Clean the URL (remove query parameters if needed)
         const cleanUrl = this.cleanUrl(url);
         
@@ -59,9 +62,16 @@ export class LinkParser {
                 const parsedLink: ParsedLink = {
                     text,
                     url: cleanUrl,
+                    originalUrl: originalUrl, // Store the original URL with block references
                     type: pattern.type,
                     fullMatch
                 };
+                
+                // Extract block reference if present
+                const blockMatch = originalUrl.match(/\?block=([^)]+)/);
+                if (blockMatch && blockMatch[1]) {
+                    parsedLink.blockReference = blockMatch[1];
+                }
                 
                 // Extract capture groups if specified
                 if (pattern.captureGroups && match.length > 1) {

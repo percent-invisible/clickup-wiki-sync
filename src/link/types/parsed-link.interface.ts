@@ -5,9 +5,14 @@ import { LINK_TYPE } from './link-type.enum';
  */
 export interface ParsedLink {
     /**
-     * The original URL of the link.
+     * The cleaned URL of the link (without query parameters).
      */
     url: string;
+    
+    /**
+     * The original URL with any query parameters intact.
+     */
+    originalUrl?: string;
     
     /**
      * The text content of the link.
@@ -18,6 +23,11 @@ export interface ParsedLink {
      * The type of link based on its pattern.
      */
     type: LINK_TYPE;
+    
+    /**
+     * Block reference ID if present in the URL.
+     */
+    blockReference?: string;
     
     /**
      * The workspace ID if present in the URL.
