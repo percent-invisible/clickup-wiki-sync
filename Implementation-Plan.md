@@ -11,6 +11,31 @@ After reviewing the current codebase, requirements, and coding standards, I've d
 4. **Record-Based Approach**: The use of records for link handlers aligns with standards.
 
 ### Areas for Improvement:
+
+### Absolute Path Handling
+
+All absolute paths for markdown files and folders are determined by inspecting the actual file path returned by the file system after writing, rather than by separate calculation. This ensures the mapping always matches the true, on-disk location and eliminates discrepancies between the mapping and the file structure.
+
+### File/Folder Structure Rules
+
+- **Pages with subpages and empty content:** Only a folder is created (no `.md` file for the page itself).
+- **Pages with subpages and non-empty content:** Both a folder and a `.md` file are created. The `.md` file is placed at the root of the folder, sharing its name.
+- **Leaf pages (no subpages):** Always create a `.md` file inside the appropriate folder.
+- This structure ensures all related content is grouped together, avoids orphan `.md` files at the document root, and results in a navigable, logical offline wiki.
+
+**Example:**
+```
+.clickup/
+└── HUB_Church_-_Find-A-Church_Map_Status/
+    └── The_Workflow_Card/
+        ├── The_Workflow_Card.md
+        ├── Fields/
+        │   ├── Status_(ARC_Find-A-Church_Map).md
+        │   └── Agreement_Start_Date_(ARC_Find-A-Church_Map).md
+        └── Activity_Feed_Items/
+            └── HUB_Church_Activity_-_ARC_Find-A-Church_Map_Form_Sent.md
+```
+
 1. **Link Transformation Logic**: Current implementation doesn't handle all required patterns and doesn't fully preserve formatting (WYSIWYG).
 2. **Error Handling**: Inconsistent error handling across the codebase with no clear progress reporting.
 3. **Memory Management**: Inefficient handling of large document trees.

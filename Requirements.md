@@ -189,3 +189,26 @@ curl --request GET \
 ---
 
 This requirements document reflects the current implementation, including all technical details and supported features as inferred from the codebase, test suite, and ClickUp_API_Docs_Requirements.md. For API field/property specifics and URL patterns, see also `ClickUp_API_Docs_Requirements.md`.
+
+---
+
+#### Path and Structure Requirements
+
+- The system must use the actual file path as returned by the file system after writing for all mapping and linking operations.
+- Pages with subpages and empty content must result in only a folder (no `.md` file).
+- Pages with subpages and content must result in both a folder and a `.md` file at the root of that folder.
+- Leaf pages must always be `.md` files inside their parent folder.
+- The directory structure must match the logical hierarchy of the ClickUp document, ensuring that navigation and linking are consistent and robust.
+
+**Example Structure:**
+```
+.clickup/
+└── HUB_Church_-_Find-A-Church_Map_Status/
+    └── The_Workflow_Card/
+        ├── The_Workflow_Card.md
+        ├── Fields/
+        │   ├── Status_(ARC_Find-A-Church_Map).md
+        │   └── Agreement_Start_Date_(ARC_Find-A-Church_Map).md
+        └── Activity_Feed_Items/
+            └── HUB_Church_Activity_-_ARC_Find-A-Church_Map_Form_Sent.md
+```
